@@ -1,0 +1,11 @@
+data
+**/log
+output
+**/__pycache__
+
+.idea
+.vscode
+pretrained_models
+trained_models
+
+array.pkl
