@@ -19,9 +19,12 @@ class BERT(nn.Module):
             logits = torch.argmax(logits, 1)
             for pred, true in zip(logits, labels):
                 pred, true = pred.item(), true.item()
-                if pred == 1: total_pred += 1
-                if true == 1: total_true += 1
-                if pred == true: pred_true += 1
+                if pred == 1 and true == 1:
+                    pred_true += 1
+                elif pred == 1:
+                    total_pred += 1
+                elif true == 1:
+                    total_true += 1
 
         try:
             precision = pred_true / total_pred
