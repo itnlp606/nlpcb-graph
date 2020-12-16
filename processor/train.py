@@ -59,8 +59,10 @@ def train(args, tokenizer, array, device):
             # use tqdm
             if args.use_tqdm:
                 train_iter = tqdm(train_loader, ncols=50)
+                valid_iter = tqdm(valid_loader, ncols=50)
             else:
                 train_iter = train_loader
+                valid_iter = valid_loader
 
             # training process
             for _, batch_data in enumerate(train_iter):
@@ -108,7 +110,7 @@ def train(args, tokenizer, array, device):
                 with torch.no_grad():
                     valid_losses = 0
                     pred_logits, pred_labels = [], []
-                    for idx, batch_data in enumerate(valid_loader):
+                    for idx, batch_data in enumerate(valid_iter):
                         batch_data = tuple(i.to(device) for i in batch_data)
                         ids, masks, labels = batch_data
                         

@@ -18,6 +18,7 @@ class BERT(nn.Module):
         for logits, labels in zip(pred_logits, pred_labels):
             logits = torch.argmax(logits, 1)
             for logit, label in zip(logits, labels):
+                print(logit, label)
                 for pred, true in zip(logit, label):
                     pred, true = pred.item(), true.item()
                     if pred == 1: total_pred += 1
