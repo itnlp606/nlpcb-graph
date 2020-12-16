@@ -21,7 +21,7 @@ class BERT(nn.Module):
                 pred, true = pred.item(), true.item()
                 if pred == 1: total_pred += 1
                 if true == 1: total_true += 1
-                if pred == true: pred_true
+                if pred == true: pred_true += 1
 
         try:
             precision = pred_true / total_pred
