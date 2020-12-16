@@ -63,41 +63,41 @@ def train(args, tokenizer, array, device):
                 train_iter = train_loader
 
             # training process
-            # for _, batch_data in enumerate(train_iter):
-            #     batch_data = tuple(i.to(device) for i in batch_data)
-            #     ids, masks, labels = batch_data
+            for _, batch_data in enumerate(train_iter):
+                batch_data = tuple(i.to(device) for i in batch_data)
+                ids, masks, labels = batch_data
 
-            #     model.zero_grad()
-            #     loss, logits = model(ids, masks, labels).to_tuple()
+                model.zero_grad()
+                loss, logits = model(ids, masks, labels).to_tuple()
 
-            #     # process loss
-            #     loss.backward()
-            #     train_losses += loss.item()
+                # process loss
+                loss.backward()
+                train_losses += loss.item()
 
-            #     # fgm adversial training
-            #     if args.use_at == 'fgm':
-            #         fgm.attack()
-            #         loss_adv, _ = model(ids, masks, labels).to_tuple()
-            #         loss_adv.backward()
-            #         fgm.restore()
+                # fgm adversial training
+                if args.use_at == 'fgm':
+                    fgm.attack()
+                    loss_adv, _ = model(ids, masks, labels).to_tuple()
+                    loss_adv.backward()
+                    fgm.restore()
 
-            #     # pgd adversarial training
-            #     if args.use_at == 'pgd':
-            #         pgd.backup_grad()
-            #         for t in range(K):
-            #             pgd.attack(is_first_attack=(t==0)) # 在embedding上添加对抗扰动, first attack时备份param.data
-            #             if t != K-1:
-            #                 model.zero_grad()
-            #             else:
-            #                 pgd.restore_grad()
-            #             loss_adv, _ = model(batch_input, batch_label).to_tuple()
-            #             loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
-            #         pgd.restore() # restore embedding parameters
+                # pgd adversarial training
+                if args.use_at == 'pgd':
+                    pgd.backup_grad()
+                    for t in range(K):
+                        pgd.attack(is_first_attack=(t==0)) # 在embedding上添加对抗扰动, first attack时备份param.data
+                        if t != K-1:
+                            model.zero_grad()
+                        else:
+                            pgd.restore_grad()
+                        loss_adv, _ = model(batch_input, batch_label).to_tuple()
+                        loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
+                    pgd.restore() # restore embedding parameters
 
-            #     # tackle exploding gradients
-            #     torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=args.max_grad_norm)
-            #     optimizer.step()
-            #     scheduler.step()
+                # tackle exploding gradients
+                torch.nn.utils.clip_grad_norm_(parameters=model.parameters(), max_norm=args.max_grad_norm)
+                optimizer.step()
+                scheduler.step()
 
             # swa_model.update_parameters(model)
             train_losses /= len(train_loader)

@@ -13,8 +13,6 @@ class BERT(nn.Module):
         return self.emission(input_ids=ids, attention_mask=masks, labels=labels)
     
     def calculate_F1(self, pred_logits, pred_labels):
-        print(len(pred_logits), len(pred_labels))
-        print(pred_logits, pred_labels)
         total_true, total_pred, pred_true = 0, 0, 0
         # for each element in list
         for logits, labels in zip(pred_logits, pred_labels):
@@ -22,14 +20,9 @@ class BERT(nn.Module):
                 logit = torch.argmax(logit, 1)
                 for pred, true in zip(logit, label):
                     pred, true = pred.item(), true.item()
-                    if abs(true - LABEL2ID['[PAD]']) < 0.1:
-                        break 
-                    if abs(pred - LABEL2ID['I']) < 0.1 and abs(true-LABEL2ID['I']) < 0.1:
-                        pred_true += 1
-                    if abs(true - LABEL2ID['I']) < 0.1:
-                        total_true += 1
-                    if abs(pred - LABEL2ID['I']) < 0.1:
-                        total_pred += 1
+                    if pred == 1: total_pred += 1
+                    if true == 1: total_true += 1
+                    if pred == ture: pred_true
 
         try:
             precision = pred_true / total_pred
