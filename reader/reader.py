@@ -40,8 +40,6 @@ def divide_dataset(array, num_fold, fold):
 
     num_blocks = num_fold-fold
     start = block_len*num_blocks
-    if fold == 1:
-        return array[0:start], array[start:]
     a = np.vstack([array[0:start], array[start+block_len:]])
     return a, array[start:start+block_len]
 
