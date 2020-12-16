@@ -2,11 +2,11 @@ python main.py \
 --do_train 1 \
 --fold 1 \
 --num_fold 5 \
---avg_steps 3 \
+--avg_steps 1 \
 --max_epoches 20 \
 --save_models 0 \
 --stop_epoches 15 \
---batch_size 16 \
+--batch_size 32 \
 --use_tqdm 1 \
 --use_cuda 1 \
 --gpu_id 0 \
