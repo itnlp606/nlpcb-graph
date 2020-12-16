@@ -16,14 +16,12 @@ class BERT(nn.Module):
         total_true, total_pred, pred_true = 0, 0, 0
         # for each element in list
         for logits, labels in zip(pred_logits, pred_labels):
-            print(logits, labels)
             logits = torch.argmax(logits, 1)
-            for logit, label in zip(logits, labels):
-                for pred, true in zip(logit, label):
-                    pred, true = pred.item(), true.item()
-                    if pred == 1: total_pred += 1
-                    if true == 1: total_true += 1
-                    if pred == ture: pred_true
+            for pred, true in zip(logits, labels):
+                pred, true = pred.item(), true.item()
+                if pred == 1: total_pred += 1
+                if true == 1: total_true += 1
+                if pred == ture: pred_true
 
         try:
             precision = pred_true / total_pred
