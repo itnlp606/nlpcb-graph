@@ -126,7 +126,8 @@ def train(args, tokenizer, array, device):
                     valid_losses /= len(valid_loader)
                     precision, recall, F1 = swa_model.module.calculate_F1(pred_logits, pred_labels)
             
-                torch.save(swa_model.module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
+                if args.save_models:
+                    torch.save(swa_model.module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
                 print('Epoch %d train:%.2e valid:%.2e precision:%.4f recall:%.4f F1:%.4f time:%.0f' % \
                     (i+1, train_losses, valid_losses, precision, recall, F1, time()-start_time))
 

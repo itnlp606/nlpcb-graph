@@ -10,5 +10,5 @@ python main.py \
 --use_tqdm 1 \
 --use_cuda 1 \
 --gpu_id 0 \
---model_dir models \
+--model_dir trained_models \
 --model_name_or_path bert-base-uncased
