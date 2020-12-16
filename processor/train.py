@@ -109,7 +109,6 @@ def train(args, tokenizer, array, device):
                     valid_losses = 0
                     pred_logits, pred_labels = [], []
                     for idx, batch_data in enumerate(valid_loader):
-                        print(idx, len(valid_loader))
                         batch_data = tuple(i.to(device) for i in batch_data)
                         ids, masks, labels = batch_data
                         
