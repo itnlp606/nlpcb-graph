@@ -103,7 +103,7 @@ def train(args, tokenizer, array, device):
                 optimizer.step()
                 scheduler.step()
 
-            # swa_model.update_parameters(model)
+            swa_model.update_parameters(model)
             train_losses /= len(train_loader)
             
             # evaluate
