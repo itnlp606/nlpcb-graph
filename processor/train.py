@@ -27,7 +27,7 @@ def train(args, tokenizer, array, device):
 
         # new tensorized data and maps
         train_data, valid_data = divide_dataset(array, args.num_fold, fold)
-        train_loader = tensorize(train_data, tokenizer, args, mode='random')
+        pos_loader, neg_loader = tensorize(train_data, tokenizer, args, mode='random')
         valid_loader = tensorize(valid_data, tokenizer, args, mode='seq')
 
         # new optimizer and scheduler
@@ -44,7 +44,7 @@ def train(args, tokenizer, array, device):
         scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
             optimizer,
             num_warmup_steps=args.warmup_steps,
-            num_training_steps=args.max_epoches*len(train_loader),
+            num_training_steps=args.max_epoches*len(pos_loader),
             num_cycles=int(args.max_epoches/args.avg_steps)
         )
 
@@ -58,18 +58,25 @@ def train(args, tokenizer, array, device):
 
             # use tqdm
             if args.use_tqdm:
-                train_iter = tqdm(train_loader, ncols=50)
+                train_iter = tqdm(zip(pos_loader, neg_loader), ncols=50)
                 valid_iter = tqdm(valid_loader, ncols=50)
                 train_iter.set_description('Train')
                 valid_iter.set_description('Test')
             else:
-                train_iter = train_loader
+                train_iter = zip(pos_loader, neg_loader)
                 valid_iter = valid_loader
 
             # training process
-            for _, batch_data in enumerate(train_iter):
-                batch_data = tuple(i.to(device) for i in batch_data)
-                ids, masks, labels = batch_data
+            for _, (pos_data, neg_data) in enumerate(train_iter):
+                pos_data = tuple(i.to(device) for i in pos_data)
+                neg_data = tuple(i.to(device) for i in neg_data)
+                pos_ids, pos_masks, pos_labels = pos_data
+                neg_ids, neg_masks, neg_labels = neg_data
+
+                # concat
+                ids = torch.cat((pos_ids, neg_ids), dim=0)
+                masks = torch.cat((pos_masks, neg_masks), dim=0)
+                labels = torch.cat((pos_labels, neg_labels), dim=0)
 
                 model.zero_grad()
                 loss, logits = model(ids, masks, labels).to_tuple()

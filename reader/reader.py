@@ -9,17 +9,39 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 
 def tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
-    tokenized_data, labels = preprocess(data, tokenizer)
-    ids, masks = tokenized_data['input_ids'], tokenized_data['attention_mask']
-
-    dataset = TensorDataset(ids, masks, labels)
     if mode == 'seq':
+        tokenized_data, labels = preprocess(data, tokenizer)
+        ids, masks = tokenized_data['input_ids'], tokenized_data['attention_mask']
+        dataset = TensorDataset(ids, masks, labels)
         sampler = SequentialSampler(dataset)
+        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
     elif mode == 'random':
-        sampler = RandomSampler(dataset)
-    data_loader = DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
-    
-    return data_loader
+        tokenized_pos, tokenized_neg, pos_labels, neg_labels = negsamp_preprocess(data, tokenizer)
+        pos_dataset = TensorDataset(tokenized_pos['input_ids'], tokenized_pos['attention_mask'], pos_labels)
+        neg_dataset = TensorDataset(tokenized_neg['input_ids'], tokenized_neg['attention_mask'], neg_labels)
+        pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
+        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=4)
+        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=12)
+        return pos_loader, neg_loader
+
+def negsamp_preprocess(data, tokenizer):
+    # negative sampling
+    pos_data, pos_labels, neg_data, neg_labels = [], [], [], []
+
+    for tup in data:
+        text, label = tup
+        if label == '1':
+            pos_data.append(text)
+            pos_labels.append(int(label))
+        else:
+            neg_labels.append(int(label))
+            neg_data.append(text)
+    tokenized_pos = tokenizer(pos_data, padding='max_length', truncation=True, return_tensors='pt')
+    tokenized_neg = tokenizer(neg_data, padding='max_length', truncation=True, return_tensors='pt')
+    pos_labels = torch.tensor(pos_labels)
+    neg_labels = torch.tensor(neg_labels)
+
+    return tokenized_pos, tokenized_neg, pos_labels, neg_labels
 
 # return tokenizer, labels
 def preprocess(data, tokenizer):
