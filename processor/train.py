@@ -111,7 +111,7 @@ def train(args, tokenizer, array, device):
                 scheduler.step()
 
             swa_model.update_parameters(model)
-            train_losses /= len(train_loader)
+            train_losses /= len(pos_loader)
             
             # evaluate
             if (i+1) % args.avg_steps == 0:
