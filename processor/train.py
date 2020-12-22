@@ -58,8 +58,8 @@ def train(args, tokenizer, array, device):
 
             # use tqdm
             if args.use_tqdm:
-                train_iter = tqdm(zip(pos_loader, neg_loader), ncols=50)
-                valid_iter = tqdm(valid_loader, ncols=50)
+                train_iter = tqdm(zip(pos_loader, neg_loader), ncols=100)
+                valid_iter = tqdm(valid_loader, ncols=100)
                 train_iter.set_description('Train')
                 valid_iter.set_description('Test')
             else:
