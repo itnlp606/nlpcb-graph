@@ -17,7 +17,13 @@ def train(args, tokenizer, array, device):
     for fold in folds:
         # new model for each fold
         model = BERT(args).to(device)
-        swa_model = swa_utils.AveragedModel(model, device)
+
+        if args.avg_steps:
+            swa_model = swa_utils.AveragedModel(model, device)
+            valid_model = swa_model
+            valid_module = swa_model.module
+        else:
+            valid_model, valid_module = model, model
 
         # use at
         if args.use_at == 'fgm': fgm = FGM(model)
@@ -102,13 +108,6 @@ def train(args, tokenizer, array, device):
             # evaluate
             steps = max(1, args.avg_steps)
             if (i+1) % steps == 0:
-                # judge models
-                if args.avg_steps:
-                    valid_model = swa_model
-                    valid_module = swa_model.module
-                else:
-                    valid_model, valid_module = model, model
-
                 with torch.no_grad():
                     valid_model.eval()
                     valid_losses = 0
