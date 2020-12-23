@@ -1,4 +1,4 @@
-!python main.py \
+python main.py \
 --do_train 1 \
 --fold 1 \
 --num_fold 5 \

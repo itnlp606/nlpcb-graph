@@ -3,6 +3,7 @@ import json
 import torch
 import pickle
 import numpy as np
+from functools import reduce
 from utils.constants import *
 from utils.utils import print_execute_time, print_empty_line
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
@@ -18,15 +19,19 @@ def tensorize(data, tokenizer, args, mode='seq'):
     elif mode == 'random':
         tokenized_data, labels = preprocess(data, tokenizer)
         pos_ids, pos_masks, neg_ids, neg_masks = [], [], [], []
-        for i, (data, label) in enumerate(zip(tokenized_data, labels)):
+        for i, (ids, mask, label) in enumerate(zip(tokenized_data['input_ids'], \
+            tokenized_data['attention_mask'], labels)):
+            ids = ids.unsqueeze(0)
+            mask = mask.unsqueeze(0)
             if label == 1:
-                pos_ids.append(data['input_ids'])
-                pos_masks.append(data['attention_mask'])
+                pos_ids.append(ids)
+                pos_masks.append(mask)
             else:
-                neg_ids.append(data['input_ids'])
-                neg_masks.append(data['attention_mask'])
-        pos_ids, pos_masks, neg_ids, neg_masks = torch.tensor(pos_ids), \
-            torch.tensor(pos_masks), torch.tensor(neg_ids), torch.tensor(neg_masks)
+                neg_ids.append(ids)
+                neg_masks.append(mask)
+        
+        pos_ids, pos_masks, neg_ids, neg_masks = to_tensor(pos_ids), \
+            to_tensor(pos_masks), to_tensor(neg_ids), to_tensor(neg_masks)
         
         pos_dataset = TensorDataset(pos_ids, pos_masks, torch.ones(pos_ids.shape[0], dtype=torch.int32))
         neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int32))
@@ -35,24 +40,9 @@ def tensorize(data, tokenizer, args, mode='seq'):
         neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=12)
         return pos_loader, neg_loader
 
-def negsamp_preprocess(data, tokenizer):
-    # negative sampling
-    pos_data, pos_labels, neg_data, neg_labels = [], [], [], []
-
-    for tup in data:
-        text, label = tup
-        if label == '1':
-            pos_data.append(text)
-            pos_labels.append(int(label))
-        else:
-            neg_labels.append(int(label))
-            neg_data.append(text)
-    tokenized_pos = tokenizer(pos_data, padding='max_length', truncation=True, return_tensors='pt')
-    tokenized_neg = tokenizer(neg_data, padding='max_length', truncation=True, return_tensors='pt')
-    pos_labels = torch.tensor(pos_labels)
-    neg_labels = torch.tensor(neg_labels)
-
-    return tokenized_pos, tokenized_neg, pos_labels, neg_labels
+# convert list of tensors to a tensor
+def to_tensor(l):
+    return reduce(lambda x1, x2: torch.cat((x1, x2), dim=0), l)
 
 # return tokenizer, labels
 def preprocess(data, tokenizer):
