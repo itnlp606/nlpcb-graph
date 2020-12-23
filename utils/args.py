@@ -22,7 +22,7 @@ def get_parser():
     parser.add_argument("--max_epoches", type=int, default=10)
     parser.add_argument("--max_steps", type=int, default=200000)
     parser.add_argument("--stop_epoches", type=int, default=5)
-    parser.add_argument("--avg_steps", type=int, default=3)
+    parser.add_argument("--avg_steps", type=int, default=0)
 
     ## predict
     parser.add_argument("--model_dir", type=str, default=None)

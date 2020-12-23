@@ -1,24 +1,29 @@
 from torch.optim.lr_scheduler import LambdaLR
+from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
 
-def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_steps, last_epoch=-1):
-    def lr_lambda(current_step):
-        if current_step < num_warmup_steps:
-            return float(current_step) / float(max(1, num_warmup_steps))
-        return max(
-            1e-6, float(num_training_steps - current_step) / float(max(1, num_training_steps - num_warmup_steps))
+def get_optimizer_scheduler(avg_steps):
+    param_optimizer = list(model.named_parameters())
+    no_decay = ['bias', 'gamma', 'beta']
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+            'weight_decay_rate': 0.01},
+        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
+            'weight_decay_rate': 0.0},
+    ]
+    optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
+
+    if avg_steps:
+        scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=args.warmup_steps,
+            num_training_steps=args.max_epoches*len(pos_loader),
+            num_cycles=int(args.max_epoches/args.avg_steps)
         )
-
-    return LambdaLR(optimizer, lr_lambda, last_epoch)
-
-def get_cosine_with_hard_restarts_schedule_with_warmup(
-    optimizer: Optimizer, num_warmup_steps: int, num_training_steps: int, num_cycles: int = 1, last_epoch: int = -1
-):
-    def lr_lambda(current_step):
-        if current_step < num_warmup_steps:
-            return float(current_step) / float(max(1, num_warmup_steps))
-        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
-        if progress >= 1.0:
-            return 0.0
-        return max(0.0, 0.5 * (1.0 + math.cos(math.pi * ((float(num_cycles) * progress) % 1.0))))
-
-    return LambdaLR(optimizer, lr_lambda, last_epoch)
+    else:
+        scheduler = get_linear_schedule_with_warmup(
+            optimizer,
+            num_warmup_steps=args.num_warmup_steps,
+            num_training_steps=args.max_epoches*len(pos_loader)
+        )
+    
+    return optimizer, scheduler

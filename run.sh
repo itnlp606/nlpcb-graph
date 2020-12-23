@@ -2,7 +2,7 @@ python main.py \
 --do_train 1 \
 --fold 1 \
 --num_fold 5 \
---avg_steps 1 \
+--avg_steps 0 \
 --max_epoches 20 \
 --save_models 0 \
 --stop_epoches 15 \

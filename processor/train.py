@@ -6,8 +6,8 @@ from model.bert import BERT
 from model.fgm import FGM
 from model.pgd import PGD
 from torch.optim import AdamW, swa_utils
+from utils.optim import get_optimizer_scheduler
 from reader.reader import tensorize, divide_dataset
-from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
 
 def train(args, tokenizer, array, device):
     # do k-fold
@@ -18,6 +18,7 @@ def train(args, tokenizer, array, device):
         # new model for each fold
         model = BERT(args).to(device)
         swa_model = swa_utils.AveragedModel(model, device)
+        swa_model.eval()
 
         # use at
         if args.use_at == 'fgm': fgm = FGM(model)
@@ -30,23 +31,8 @@ def train(args, tokenizer, array, device):
         pos_loader, neg_loader = tensorize(train_data, tokenizer, args, mode='random')
         valid_loader = tensorize(valid_data, tokenizer, args, mode='seq')
 
-        # new optimizer and scheduler
-        param_optimizer = list(model.named_parameters())
-        no_decay = ['bias', 'gamma', 'beta']
-        optimizer_grouped_parameters = [
-            {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
-                'weight_decay_rate': 0.01},
-            {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
-                'weight_decay_rate': 0.0},
-        ]
-        optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon)
-
-        scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
-            optimizer,
-            num_warmup_steps=args.warmup_steps,
-            num_training_steps=args.max_epoches*len(pos_loader),
-            num_cycles=int(args.max_epoches/args.avg_steps)
-        )
+        # optim
+        optimizer, scheduler = get_optimizer_scheduler(arg.avg_steps)
 
         # training
         stop_ct, best_F1, best_model, best_epoch = 0, 0, None, -1
@@ -110,20 +96,25 @@ def train(args, tokenizer, array, device):
                 optimizer.step()
                 scheduler.step()
 
-            swa_model.update_parameters(model)
             train_losses /= len(pos_loader)
+            if args.avg_steps:
+                swa_model.update_parameters(model)
             
             # evaluate
             if (i+1) % args.avg_steps == 0:
-                swa_model.eval()
                 with torch.no_grad():
+                    model.eval()
                     valid_losses = 0
                     pred_logits, pred_labels = [], []
                     for idx, batch_data in enumerate(valid_iter):
                         batch_data = tuple(i.to(device) for i in batch_data)
                         ids, masks, labels = batch_data
                         
-                        loss, logits = swa_model(ids, masks, labels).to_tuple()
+                        if args.avg_steps:
+                            loss, logits = swa_model(ids, masks, labels).to_tuple()
+                        else:
+                            loss, logits = model(ids, masks, labels).to_tuple()
+
                         pred_logits.append(logits)
                         pred_labels.append(labels)
 
@@ -131,10 +122,15 @@ def train(args, tokenizer, array, device):
                         valid_losses += loss.item()
 
                     valid_losses /= len(valid_loader)
-                    precision, recall, F1 = swa_model.module.calculate_F1(pred_logits, pred_labels)
+
+                    if args.avg_steps:
+                        precision, recall, F1 = swa_model.module.calculate_F1(pred_logits, pred_labels)
+                    else:
+                        precision, recall, F1 = model.calculate_F1(pred_logits, pred_labels)
             
                 if args.save_models:
                     torch.save(swa_model.module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
+                    
                 print('Epoch %d train:%.2e valid:%.2e precision:%.4f recall:%.4f F1:%.4f time:%.0f' % \
                     (i+1, train_losses, valid_losses, precision, recall, F1, time()-start_time))
 
