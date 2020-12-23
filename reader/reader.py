@@ -21,8 +21,8 @@ def tensorize(data, tokenizer, args, mode='seq'):
         pos_ids, pos_masks, neg_ids, neg_masks = [], [], [], []
         for i, (ids, mask, label) in enumerate(zip(tokenized_data['input_ids'], \
             tokenized_data['attention_mask'], labels)):
-            ids = ids.unsqueeze(0)
-            mask = mask.unsqueeze(0)
+            ids = ids
+            mask = mask
             if label == 1:
                 pos_ids.append(ids)
                 pos_masks.append(mask)
@@ -30,8 +30,8 @@ def tensorize(data, tokenizer, args, mode='seq'):
                 neg_ids.append(ids)
                 neg_masks.append(mask)
         
-        pos_ids, pos_masks, neg_ids, neg_masks = to_tensor(pos_ids), \
-            to_tensor(pos_masks), to_tensor(neg_ids), to_tensor(neg_masks)
+        pos_ids, pos_masks, neg_ids, neg_masks = torch.stack(pos_ids), \
+            torch.stack(pos_masks), torch.stack(neg_ids), torch.stack(neg_masks)
         
         pos_dataset = TensorDataset(pos_ids, pos_masks, torch.ones(pos_ids.shape[0], dtype=torch.int32))
         neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int32))
@@ -39,10 +39,6 @@ def tensorize(data, tokenizer, args, mode='seq'):
         pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=4)
         neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=12)
         return pos_loader, neg_loader
-
-# convert list of tensors to a tensor
-def to_tensor(l):
-    return reduce(lambda x1, x2: torch.cat((x1, x2), dim=0), l)
 
 # return tokenizer, labels
 def preprocess(data, tokenizer):

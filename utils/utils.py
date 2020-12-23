@@ -47,7 +47,6 @@ def clear_dir(dir):
     files = [os.path.join(dir, f) for f in os.listdir(dir)]
     for f in files:
         os.remove(f)
-
-
+        
 if __name__ == '__main__':
     print(strftime())
