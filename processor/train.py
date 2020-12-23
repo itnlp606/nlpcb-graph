@@ -18,7 +18,6 @@ def train(args, tokenizer, array, device):
         # new model for each fold
         model = BERT(args).to(device)
         swa_model = swa_utils.AveragedModel(model, device)
-        swa_model.eval()
 
         # use at
         if args.use_at == 'fgm': fgm = FGM(model)
@@ -32,7 +31,7 @@ def train(args, tokenizer, array, device):
         valid_loader = tensorize(valid_data, tokenizer, args, mode='seq')
 
         # optim
-        optimizer, scheduler = get_optimizer_scheduler(arg.avg_steps)
+        optimizer, scheduler = get_optimizer_scheduler(args.avg_steps)
 
         # training
         stop_ct, best_F1, best_model, best_epoch = 0, 0, None, -1
@@ -103,6 +102,13 @@ def train(args, tokenizer, array, device):
             # evaluate
             steps = max(1, args.avg_steps)
             if (i+1) % steps == 0:
+                # judge models
+                if args.avg_steps:
+                    valid_model = swa_model
+                    valid_module = swa_model.module
+                else:
+                    valid_model, valid_module = model, model
+
                 with torch.no_grad():
                     model.eval()
                     valid_losses = 0
@@ -111,10 +117,7 @@ def train(args, tokenizer, array, device):
                         batch_data = tuple(i.to(device) for i in batch_data)
                         ids, masks, labels = batch_data
                         
-                        if args.avg_steps:
-                            loss, logits = swa_model(ids, masks, labels).to_tuple()
-                        else:
-                            loss, logits = model(ids, masks, labels).to_tuple()
+                        loss, logits = valid_model(ids, masks, labels).to_tuple()
 
                         pred_logits.append(logits)
                         pred_labels.append(labels)
@@ -124,24 +127,22 @@ def train(args, tokenizer, array, device):
 
                     valid_losses /= len(valid_loader)
 
-                    if args.avg_steps:
-                        precision, recall, F1 = swa_model.module.calculate_F1(pred_logits, pred_labels)
-                    else:
-                        precision, recall, F1 = model.calculate_F1(pred_logits, pred_labels)
+                    precision, recall, F1 = valid_module.calculate_F1(pred_logits, pred_labels)
             
                 if args.save_models:
-                    torch.save(swa_model.module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
+                    torch.save(valid_module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
 
                 print('Epoch %d train:%.2e valid:%.2e precision:%.4f recall:%.4f F1:%.4f time:%.0f' % \
                     (i+1, train_losses, valid_losses, precision, recall, F1, time()-start_time))
 
-                # if F1 > best_F1:
-                #     best_F1 = F1
-                #     best_model = copy.deepcopy(swa_model.module)
-                #     best_epoch = i+1
-                # else:
-                #     stop_ct += 1
-                #     if stop_ct == args.stop_epoches:
-                #         if args.save_models:
-                #             torch.save(best_model, args.model_dir + '/MOD' + str(fold) + '_' + str(best_epoch))
-                #         break
+                if args.avg_steps == 0:
+                    if F1 > best_F1:
+                        best_F1 = F1
+                        best_model = copy.deepcopy(swa_model.module)
+                        best_epoch = i+1
+                    else:
+                        stop_ct += 1
+                        if stop_ct == args.stop_epoches:
+                            if args.save_models:
+                                torch.save(best_model, args.model_dir + '/MOD' + str(fold) + '_' + str(best_epoch))
+                            break
