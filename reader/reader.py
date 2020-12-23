@@ -16,9 +16,20 @@ def tensorize(data, tokenizer, args, mode='seq'):
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
     elif mode == 'random':
-        tokenized_pos, tokenized_neg, pos_labels, neg_labels = negsamp_preprocess(data, tokenizer)
-        pos_dataset = TensorDataset(tokenized_pos['input_ids'], tokenized_pos['attention_mask'], pos_labels)
-        neg_dataset = TensorDataset(tokenized_neg['input_ids'], tokenized_neg['attention_mask'], neg_labels)
+        tokenized_data, labels = preprocess(data, tokenizer)
+        pos_ids, pos_masks, neg_ids, neg_masks = [], [], [], []
+        for i, (data, label) in enumerate(zip(tokenized_data, labels)):
+            if label == 1:
+                pos_ids.append(data['input_ids'])
+                pos_masks.append(data['attention_mask'])
+            else:
+                neg_ids.append(data['input_ids'])
+                neg_masks.append(data['attention_mask'])
+        pos_ids, pos_masks, neg_ids, neg_masks = torch.tensor(pos_ids), \
+            torch.tensor(pos_masks), torch.tensor(neg_ids), torch.tensor(neg_masks)
+        
+        pos_dataset = TensorDataset(pos_ids, pos_masks, torch.ones(pos_ids.shape[0], dtype=torch.int32))
+        neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int32))
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
         pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=4)
         neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=12)
