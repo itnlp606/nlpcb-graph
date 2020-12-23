@@ -103,12 +103,12 @@ def train(args, tokenizer, array, device):
                 scheduler.step()
 
             train_losses /= len(pos_loader)
-            if args.avg_steps:
-                swa_model.update_parameters(model)
             
             # evaluate
             steps = max(1, args.avg_steps)
             if (i+1) % steps == 0:
+                if args.avg_steps:
+                    swa_model.update_parameters(model)
                 with torch.no_grad():
                     valid_model.eval()
                     valid_losses = 0

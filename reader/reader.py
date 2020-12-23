@@ -3,7 +3,6 @@ import json
 import torch
 import pickle
 import numpy as np
-from functools import reduce
 from utils.constants import *
 from utils.utils import print_execute_time, print_empty_line
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
