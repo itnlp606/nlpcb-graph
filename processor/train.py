@@ -101,7 +101,8 @@ def train(args, tokenizer, array, device):
                 swa_model.update_parameters(model)
             
             # evaluate
-            if (i+1) % args.avg_steps == 0:
+            steps = max(1, args.avg_steps)
+            if (i+1) % steps == 0:
                 with torch.no_grad():
                     model.eval()
                     valid_losses = 0
@@ -130,7 +131,7 @@ def train(args, tokenizer, array, device):
             
                 if args.save_models:
                     torch.save(swa_model.module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
-                    
+
                 print('Epoch %d train:%.2e valid:%.2e precision:%.4f recall:%.4f F1:%.4f time:%.0f' % \
                     (i+1, train_losses, valid_losses, precision, recall, F1, time()-start_time))
 
