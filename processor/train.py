@@ -31,7 +31,7 @@ def train(args, tokenizer, array, device):
         valid_loader = tensorize(valid_data, tokenizer, args, mode='seq')
 
         # optim
-        optimizer, scheduler = get_optimizer_scheduler(args.avg_steps)
+        optimizer, scheduler = get_optimizer_scheduler(args.avg_steps, model)
 
         # training
         stop_ct, best_F1, best_model, best_epoch = 0, 0, None, -1
@@ -110,7 +110,7 @@ def train(args, tokenizer, array, device):
                     valid_model, valid_module = model, model
 
                 with torch.no_grad():
-                    model.eval()
+                    valid_model.eval()
                     valid_losses = 0
                     pred_logits, pred_labels = [], []
                     for idx, batch_data in enumerate(valid_iter):

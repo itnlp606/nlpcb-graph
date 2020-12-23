@@ -1,7 +1,7 @@
 from torch.optim.lr_scheduler import LambdaLR
 from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
 
-def get_optimizer_scheduler(avg_steps):
+def get_optimizer_scheduler(avg_steps, model):
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'gamma', 'beta']
     optimizer_grouped_parameters = [
