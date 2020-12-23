@@ -23,7 +23,7 @@ def get_optimizer_scheduler(args, model):
     else:
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
-            num_warmup_steps=args.num_warmup_steps,
+            num_warmup_steps=args.warmup_steps,
             num_training_steps=args.max_epoches*len(pos_loader)
         )
     
