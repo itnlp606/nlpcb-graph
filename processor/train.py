@@ -5,7 +5,7 @@ from tqdm import tqdm
 from model.bert import BERT
 from model.fgm import FGM
 from model.pgd import PGD
-from torch.optim import AdamW, swa_utils
+from torch.optim import swa_utils
 from utils.optim import get_optimizer_scheduler
 from reader.reader import tensorize, divide_dataset
 

@@ -1,3 +1,4 @@
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
 
