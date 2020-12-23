@@ -2,7 +2,7 @@ from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from transformers import get_linear_schedule_with_warmup, get_cosine_with_hard_restarts_schedule_with_warmup
 
-def get_optimizer_scheduler(args, model):
+def get_optimizer_scheduler(args, model, training_steps):
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'gamma', 'beta']
     optimizer_grouped_parameters = [
@@ -17,14 +17,14 @@ def get_optimizer_scheduler(args, model):
         scheduler = get_cosine_with_hard_restarts_schedule_with_warmup(
             optimizer,
             num_warmup_steps=args.warmup_steps,
-            num_training_steps=args.max_epoches*len(pos_loader),
+            num_training_steps=training_steps,
             num_cycles=int(args.max_epoches/args.avg_steps)
         )
     else:
         scheduler = get_linear_schedule_with_warmup(
             optimizer,
             num_warmup_steps=args.warmup_steps,
-            num_training_steps=args.max_epoches*len(pos_loader)
+            num_training_steps=training_steps
         )
     
     return optimizer, scheduler

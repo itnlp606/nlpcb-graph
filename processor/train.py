@@ -37,7 +37,8 @@ def train(args, tokenizer, array, device):
         valid_loader = tensorize(valid_data, tokenizer, args, mode='seq')
 
         # optim
-        optimizer, scheduler = get_optimizer_scheduler(args, model)
+        training_steps = args.max_epoches*len(pos_loader)
+        optimizer, scheduler = get_optimizer_scheduler(args, model, training_steps)
 
         # training
         stop_ct, best_F1, best_model, best_epoch = 0, 0, None, -1
