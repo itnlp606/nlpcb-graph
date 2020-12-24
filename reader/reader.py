@@ -47,7 +47,6 @@ def tensorize(data, tokenizer, args, mode='seq'):
         neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int64))
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
         pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=8)
-
         neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=8)
         return pos_loader, neg_loader
 
