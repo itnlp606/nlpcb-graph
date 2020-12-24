@@ -36,13 +36,13 @@ def tensorize(data, tokenizer, args, mode='seq'):
             torch.stack(pos_masks), torch.stack(neg_ids), torch.stack(neg_masks)
         pos_labels = torch.tensor(pos_labels).unsqueeze(1)
 
+        # up sampling
         mul = neg_ids.shape[0] // pos_ids.shape[0]
         pos_ids = torch.stack([pos_ids]*mul).view(-1, pos_ids.shape[-1])
         pos_masks = torch.stack([pos_masks]*mul).view(-1, pos_masks.shape[-1])
         pos_labels = torch.stack([pos_labels]*mul).view(-1, pos_labels.shape[-1])
-
-        print(pos_labels)
         
+        # construct data loader
         pos_dataset = TensorDataset(pos_ids, pos_masks, pos_labels))
         neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int64))
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
