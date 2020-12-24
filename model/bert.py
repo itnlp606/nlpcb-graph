@@ -7,7 +7,7 @@ class BERT(nn.Module):
     def __init__(self, args):
         super(BERT, self).__init__()
         self.emission = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_path, \
-            cache_dir=args.pretrained_cache_dir, num_labels=2)
+            cache_dir=args.pretrained_cache_dir, num_labels=len(LABEL2ID)+1)
         
     def forward(self, ids, masks, labels):
         return self.emission(input_ids=ids, attention_mask=masks, labels=labels)
@@ -19,11 +19,11 @@ class BERT(nn.Module):
             logits = torch.argmax(logits, 1)
             for pred, true in zip(logits, labels):
                 pred, true = pred.item(), true.item()
-                if pred == 1 and true == 1:
+                if pred >= 1 and true >= 1:
                     pred_true += 1
-                if pred == 1:
+                if pred >= 1:
                     total_pred += 1
-                if true == 1:
+                if true >= 1:
                     total_true += 1
 
         print(total_true, total_pred, pred_true)

@@ -4,6 +4,7 @@ import torch
 import pickle
 import numpy as np
 from utils.constants import *
+from collections import defaultdict
 from utils.utils import print_execute_time, print_empty_line
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
@@ -22,7 +23,7 @@ def tensorize(data, tokenizer, args, mode='seq'):
             tokenized_data['attention_mask'], labels)):
             ids = ids
             mask = mask
-            if label == 1:
+            if label >= 1:
                 pos_ids.append(ids)
                 pos_masks.append(mask)
             else:
@@ -35,8 +36,8 @@ def tensorize(data, tokenizer, args, mode='seq'):
         pos_dataset = TensorDataset(pos_ids, pos_masks, torch.ones(pos_ids.shape[0], dtype=torch.int64))
         neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int64))
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
-        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=4)
-        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=12)
+        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=12)
+        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=4)
         return pos_loader, neg_loader
 
 # return tokenizer, labels
@@ -76,11 +77,30 @@ def data2numpy():
         sent_pat = 'sentences.txt'
 
         for article in articles:
+            # 提取句子文件
             files = os.listdir('data/'+task+'/'+article)
             for f in files:
                 if pattern in f:
                     name = f
                     break
+
+            # 构建句子id-实体 词典
+            sentid2entities = defaultdict(list)
+            with open('data/'+task+'/'+article+'/entities.txt') as f:
+                content = f.readlines()
+
+            for line in content:
+                line = line.split('\t')
+                sent_id, entity = int(line[0]), line[-1]
+                if entity[-1] == '\n': entity = entity[:-1]
+                sentid2entities[sent_id].append(entity)
+
+            # 类别名称-三元组文件字典
+            label2triples = {}
+            files = os.listdir('data/'+task+'/'+article+'/triples')
+            for label in files:
+                with open('data/'+task+'/'+article+'/triples/'+label) as f:
+                    label2triples[label[:-4]] = f.read()
             
             # get dir, data
             sent_dir = 'data/'+task+'/'+article+'/'+name
@@ -94,7 +114,18 @@ def data2numpy():
             # append data
             for i, sent in enumerate(sents):
                 if i+1 in labels:
-                    array.append((sent, 1))
+                    # get label_id
+                    entities = sentid2entities[i+1]
+
+                    vote_box = [0 for _ in range(len(LABEL2ID)+1)]
+                    for entity in entities:
+                        for idx, label in enumerate(label2triples):
+                            if entity in label2triples[label]:
+                                vote_box[LABEL2ID[label]] += 1
+                    label_id = np.argmax(vote_box)
+
+                    # assign class
+                    array.append((sent, label_id))
                 else:
                     array.append((sent, 0))
     
