@@ -43,7 +43,7 @@ def tensorize(data, tokenizer, args, mode='seq'):
         pos_labels = torch.stack([pos_labels]*mul).view(-1, pos_labels.shape[-1])
         
         # construct data loader
-        pos_dataset = TensorDataset(pos_ids, pos_masks, pos_labels))
+        pos_dataset = TensorDataset(pos_ids, pos_masks, pos_labels)
         neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int64))
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
         pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=8)
