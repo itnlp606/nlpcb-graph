@@ -15,9 +15,9 @@ if __name__ == '__main__':
         cache_dir=args.pretrained_cache_dir, use_fast=True)
 
     # read data
-    with open('array.pkl', 'rb') as f:
-        array = pickle.load(f)
-    # array = data2numpy()
+    # with open('array.pkl', 'rb') as f:
+    #     array = pickle.load(f)
+    array = data2numpy()
 
     # GPU device
     if torch.cuda.is_available() and args.use_cuda:

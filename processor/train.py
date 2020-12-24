@@ -37,7 +37,7 @@ def train(args, tokenizer, array, device):
         valid_loader = tensorize(valid_data, tokenizer, args, mode='seq')
 
         # optim
-        training_steps = args.max_epoches*len(neg_loader)
+        training_steps = args.max_epoches*len(pos_loader)
         optimizer, scheduler = get_optimizer_scheduler(args, model, training_steps)
 
         # training
@@ -50,16 +50,16 @@ def train(args, tokenizer, array, device):
 
             # use tqdm
             if args.use_tqdm:
-                train_iter = tqdm(zip(neg_loader, pos_loader), ncols=50, total=len(neg_loader))
+                train_iter = tqdm(zip(pos_loader, neg_loader), ncols=50, total=len(pos_loader))
                 valid_iter = tqdm(valid_loader, ncols=50)
                 train_iter.set_description('Train')
                 valid_iter.set_description('Test')
             else:
-                train_iter = zip(neg_loader, pos_loader)
+                train_iter = zip(pos_loader, neg_loader)
                 valid_iter = valid_loader
 
             # training process
-            for _, (neg_data, pos_data) in enumerate(train_iter):
+            for _, (pos_data, neg_data) in enumerate(train_iter):
                 pos_data = tuple(i.to(device) for i in pos_data)
                 neg_data = tuple(i.to(device) for i in neg_data)
                 pos_ids, pos_masks, pos_labels = pos_data
@@ -102,7 +102,7 @@ def train(args, tokenizer, array, device):
                 optimizer.step()
                 scheduler.step()
 
-            train_losses /= len(neg_loader)
+            train_losses /= len(pos_loader)
             
             # evaluate
             steps = max(1, args.avg_steps)

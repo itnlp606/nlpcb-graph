@@ -7,7 +7,7 @@ class BERT(nn.Module):
     def __init__(self, args):
         super(BERT, self).__init__()
         self.emission = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_path, \
-            cache_dir=args.pretrained_cache_dir, num_labels=len(LABEL2ID)+1)
+            cache_dir=args.pretrained_cache_dir, num_labels=2)
         
     def forward(self, ids, masks, labels):
         return self.emission(input_ids=ids, attention_mask=masks, labels=labels)
