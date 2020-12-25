@@ -121,6 +121,11 @@ def data2numpy():
 
             # append data
             for i, sent in enumerate(sents):
+                # add feature
+                if sent[-1] == '\n':
+                    sent = sent[:-1]
+                sent = sent + '#' + task
+
                 if i+1 in labels:
                     # get label_id
                     # entities = sentid2entities[i+1]
