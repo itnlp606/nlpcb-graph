@@ -124,7 +124,7 @@ def data2numpy():
                 # add feature
                 if sent[-1] == '\n':
                     sent = sent[:-1]
-                sent = sent + '#' + task
+#                sent = sent + '#' + task
 
                 if i+1 in labels:
                     # get label_id
