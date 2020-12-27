@@ -4,6 +4,7 @@ import torch
 import pickle
 import numpy as np
 from utils.constants import *
+from transformers import AutoTokenizer
 from collections import defaultdict
 from utils.utils import print_execute_time, print_empty_line
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
@@ -72,8 +73,13 @@ def divide_dataset(array, num_fold, fold):
 @print_execute_time
 def data2numpy():
     tasks = os.listdir('data')
+    # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
+    #     cache_dir='pretrained_models', use_fast=True)
     array = []
     mx_len = 0
+
+    dd = {0:0, 1:0}
+
     for task in tasks:
         # ignore readme
         if task[-3:] == '.md':
@@ -124,7 +130,17 @@ def data2numpy():
                 # add feature
                 if sent[-1] == '\n':
                     sent = sent[:-1]
-#                sent = sent + '#' + task
+                if i == 0:
+                    sent += '#' + sents[1]
+                elif i == len(sents)-1:
+                    sent += '#' + sents[-2]
+                else:
+                    sent += '#' + sents[i-1] + '#' + sents[i-1]
+
+                # s = tokenizer(sent)
+                # if len(s['input_ids']) < 510:
+                #     dd[0] += 1
+                # else: dd[1] += 1
 
                 if i+1 in labels:
                     # get label_id
@@ -144,5 +160,8 @@ def data2numpy():
     
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
+
+    print(dd)
+    raise Exception
 
     return np.array(array)
