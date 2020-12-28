@@ -5,7 +5,7 @@ class PGD():
         self.emb_backup = {}
         self.grad_backup = {}
 
-    def attack(self, epsilon=1., alpha=0.3, emb_name='emb.', is_first_attack=False):
+    def attack(self, epsilon=1., alpha=0.3, emb_name='word_embeddings', is_first_attack=False):
         # emb_name这个参数要换成你模型中embedding的参数名
         for name, param in self.model.named_parameters():
             if param.requires_grad and emb_name in name:
@@ -17,7 +17,7 @@ class PGD():
                     param.data.add_(r_at)
                     param.data = self.project(name, param.data, epsilon)
 
-    def restore(self, emb_name='emb.'):
+    def restore(self, emb_name="word_embeddings"):
         # emb_name这个参数要换成你模型中embedding的参数名
         for name, param in self.model.named_parameters():
             if param.requires_grad and emb_name in name: 

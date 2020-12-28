@@ -17,6 +17,7 @@ def train(args, tokenizer, array, device):
     for fold in folds:
         # new model for each fold
         model = BERT(args).to(device)
+        print('training start.. on fold', fold)
 
         if args.avg_steps:
             swa_model = swa_utils.AveragedModel(model, device)
@@ -42,11 +43,10 @@ def train(args, tokenizer, array, device):
 
         # training
         stop_ct, best_F1, best_model, best_epoch = 0, 0, None, -1
-        print('training start.. on fold', fold)
         train_losses = 0
+        start_time = time()
         for i in range(args.max_epoches):
             model.train()
-            start_time = time()
 
             # use tqdm
             if args.use_tqdm:
@@ -72,6 +72,7 @@ def train(args, tokenizer, array, device):
 
                 model.zero_grad()
                 loss, logits = model(ids, masks, labels).to_tuple()
+                _, _, ori_F1 = model.calculate_F1([logits], [labels])
 
                 # process loss
                 loss.backward()
@@ -85,7 +86,7 @@ def train(args, tokenizer, array, device):
                     fgm.restore()
 
                 # pgd adversarial training
-                if args.use_at == 'pgd':
+                elif args.use_at == 'pgd':
                     pgd.backup_grad()
                     for t in range(K):
                         pgd.attack(is_first_attack=(t==0)) # 在embedding上添加对抗扰动, first attack时备份param.data
@@ -93,8 +94,12 @@ def train(args, tokenizer, array, device):
                             model.zero_grad()
                         else:
                             pgd.restore_grad()
-                        loss_adv, _ = model(batch_input, batch_label).to_tuple()
+                        loss_adv, at_logits = model(batch_input, batch_label).to_tuple()
+                        _, _, new_F1 = model.calculate_F1([at_logits, labels])
                         loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
+                        if new_F1 < ori_F1:
+                            break
+
                     pgd.restore() # restore embedding parameters
 
                 # tackle exploding gradients
@@ -134,6 +139,7 @@ def train(args, tokenizer, array, device):
 
                 print('Epoch %d train:%.2e valid:%.2e precision:%.4f recall:%.4f F1:%.4f time:%.0f' % \
                     (i+1, train_losses, valid_losses, precision, recall, F1, time()-start_time))
+                start_time = time()
 
                 if args.avg_steps == 0:
                     if F1 > best_F1:

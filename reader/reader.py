@@ -88,6 +88,7 @@ def data2numpy():
         # process
         articles = os.listdir('data/'+task)
         pattern = 'Stanza-out.txt'
+        paragraph_pat = 'Grobid-out.txt'
         sent_pat = 'sentences.txt'
 
         for article in articles:
@@ -96,7 +97,8 @@ def data2numpy():
             for f in files:
                 if pattern in f:
                     name = f
-                    break
+                if paragraph_pat in f:
+                    para_name = f
 
             # # 构建句子id-实体 词典
             # sentid2entities = defaultdict(list)
@@ -117,8 +119,11 @@ def data2numpy():
             #         label2triples[label[:-4]] = f.read()
             
             # get dir, data
+            para_dir = 'data/'+task+'/'+article+'/'+para_name
             sent_dir = 'data/'+task+'/'+article+'/'+name
             label_dir = 'data/'+task+'/'+article+'/'+sent_pat
+            with open(para_dir, 'r') as f:
+                paras = f.readlines()
             with open(sent_dir, 'r') as f:
                 sents = f.readlines()
             with open(label_dir, 'r') as f:
@@ -130,12 +135,27 @@ def data2numpy():
                 # add feature
                 if sent[-1] == '\n':
                     sent = sent[:-1]
-                # if i == 0:
-                #     sent += '#' + sents[1]
-                # elif i == len(sents)-1:
-                #     sent += '#' + sents[-2]
-                # else:
-                #     sent += '#' + sents[i-1] + '#' + sents[i-1]
+
+                # extract title
+                for j, para in enumerate(paras):
+                    if sent in para:
+                        idx = j
+
+                while idx >= 0 and paras[idx] != '\n': idx -= 1
+                if idx == 0: title = paras[0]
+                else: title = paras[idx+1]
+
+                if title[-1] == '\n':
+                    title = title[:-1]
+                
+                sent += '#' + title
+
+                if i == 0:
+                    sent += '#' + sents[1]
+                elif i == len(sents)-1:
+                    sent += '#' + sents[-2]
+                else:
+                    sent += '#' + sents[i-1] + '#' + sents[i-1]
 
                 # s = tokenizer(sent)
                 # if len(s['input_ids']) < 510:
@@ -162,6 +182,6 @@ def data2numpy():
     #     pickle.dump(np.array(array), f)
 
     # print(dd)
-    # raise Exception
+    raise Exception
 
     return np.array(array)
