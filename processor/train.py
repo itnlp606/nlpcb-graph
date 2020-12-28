@@ -96,7 +96,7 @@ def train(args, tokenizer, array, device):
                         else:
                             pgd.restore_grad()
                         loss_adv, at_logits = model(ids, masks, labels).to_tuple()
-                        _, _, new_F1 = model.calculate_F1([at_logits, labels])
+                        _, _, new_F1 = model.calculate_F1([at_logits], [labels])
                         loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
                         if new_F1 < ori_F1:
                             break
