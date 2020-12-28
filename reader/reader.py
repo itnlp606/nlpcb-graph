@@ -155,7 +155,7 @@ def data2numpy():
                 elif i == len(sents)-1:
                     sent += '#' + sents[-2]
                 else:
-                    sent += '#' + sents[i-1] + '#' + sents[i-1]
+                    sent += '#' + sents[i-1] + '#' + sents[i+1]
 
                 # s = tokenizer(sent)
                 # if len(s['input_ids']) < 510:
