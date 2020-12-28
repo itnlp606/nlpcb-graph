@@ -130,12 +130,12 @@ def data2numpy():
                 # add feature
                 if sent[-1] == '\n':
                     sent = sent[:-1]
-                if i == 0:
-                    sent += '#' + sents[1]
-                elif i == len(sents)-1:
-                    sent += '#' + sents[-2]
-                else:
-                    sent += '#' + sents[i-1] + '#' + sents[i-1]
+                # if i == 0:
+                #     sent += '#' + sents[1]
+                # elif i == len(sents)-1:
+                #     sent += '#' + sents[-2]
+                # else:
+                #     sent += '#' + sents[i-1] + '#' + sents[i-1]
 
                 # s = tokenizer(sent)
                 # if len(s['input_ids']) < 510:
