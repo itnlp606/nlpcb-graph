@@ -137,6 +137,7 @@ def train(args, tokenizer, array, device):
 
                 if args.avg_steps == 0:
                     if F1 > best_F1:
+                        stop_ct = 0
                         best_F1 = F1
                         best_model = copy.deepcopy(valid_module)
                         best_epoch = i+1
