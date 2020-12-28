@@ -44,8 +44,8 @@ def tensorize(data, tokenizer, args, mode='seq'):
         pos_dataset = TensorDataset(pos_ids, pos_masks, torch.ones(pos_ids.shape[0], dtype=torch.int64))
         neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int64))
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
-        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=4)
-        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=12)
+        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=3)
+        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=5)
         return pos_loader, neg_loader
 
 # return tokenizer, labels
@@ -148,14 +148,14 @@ def data2numpy():
                 if title[-1] == '\n':
                     title = title[:-1]
                 
-                # sent += '#' + title
+                sent += '#' + title
 
-                # if i == 0:
-                #     sent += '#' + sents[1]
-                # elif i == len(sents)-1:
-                #     sent += '#' + sents[-2]
-                # else:
-                #     sent += '#' + sents[i-1] + '#' + sents[i+1]
+                if i == 0:
+                    sent += '#' + sents[1]
+                elif i == len(sents)-1:
+                    sent += '#' + sents[-2]
+                else:
+                    sent += '#' + sents[i-1] + '#' + sents[i+1]
 
                 # s = tokenizer(sent)
                 # if len(s['input_ids']) < 510:
