@@ -182,6 +182,6 @@ def data2numpy():
     #     pickle.dump(np.array(array), f)
 
     # print(dd)
-    raise Exception
+    # raise Exception
 
     return np.array(array)
