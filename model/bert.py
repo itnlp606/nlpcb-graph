@@ -26,7 +26,7 @@ class BERT(nn.Module):
                 if true >= 1:
                     total_true += 1
 
-        print(total_true, total_pred, pred_true)
+        # print(total_true, total_pred, pred_true)
         try:
             precision = pred_true / total_pred
             recall = pred_true / total_true
