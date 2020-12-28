@@ -72,7 +72,8 @@ def train(args, tokenizer, array, device):
 
                 model.zero_grad()
                 loss, logits = model(ids, masks, labels).to_tuple()
-                _, _, ori_F1 = model.calculate_F1([logits], [labels])
+                if args.use_at == 'pgd':
+                    _, _, ori_F1 = model.calculate_F1([logits], [labels])
 
                 # process loss
                 loss.backward()
