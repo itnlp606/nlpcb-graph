@@ -73,12 +73,12 @@ def divide_dataset(array, num_fold, fold):
 @print_execute_time
 def data2numpy():
     tasks = os.listdir('data')
-    # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
-    #     cache_dir='pretrained_models', use_fast=True)
     array = []
     mx_len = 0
 
-    dd = {0:0, 1:0}
+    dd = {0:0, 1:0, 2:0}
+    # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
+    #     cache_dir='pretrained_models', use_fast=True)
 
     for task in tasks:
         # ignore readme
@@ -130,6 +130,12 @@ def data2numpy():
                 labels = f.readlines()
             labels = [int(label) for label in labels]
 
+            
+            def get_context(i):
+                if i < 0 or i >= len(sents):
+                    return ""
+                return '#' + sents[i]
+
             # append data
             for i, sent in enumerate(sents):
                 # add feature
@@ -150,17 +156,17 @@ def data2numpy():
                 
                 sent += '#' + title
 
-                if i == 0:
-                    sent += '#' + sents[1]
-                elif i == len(sents)-1:
-                    sent += '#' + sents[-2]
-                else:
-                    sent += '#' + sents[i-1] + '#' + sents[i+1]
+                K = 2
+                for cxt in range(K):
+                    sent += get_context(i-K) + get_context(i+K)
 
                 # s = tokenizer(sent)
                 # if len(s['input_ids']) < 510:
                 #     dd[0] += 1
-                # else: dd[1] += 1
+                # else: 
+                #     dd[1] += 1
+                #     if i+1 in labels:
+                #         dd[2] += 1
 
                 if i+1 in labels:
                     # get label_id
