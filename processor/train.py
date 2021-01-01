@@ -135,7 +135,7 @@ def train(args, tokenizer, array, device):
 
                     precision, recall, F1 = valid_module.calculate_F1(pred_logits, pred_labels)
             
-                if args.save_models:
+                if args.save_models and args.avg_steps > 0:
                     torch.save(valid_module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
 
                 print('Epoch %d train:%.2e valid:%.2e precision:%.4f recall:%.4f F1:%.4f time:%.0f' % \
