@@ -11,14 +11,13 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 
 def tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
+    tokenized_data, labels = preprocess(data, tokenizer)
     if mode == 'seq':
-        tokenized_data, labels = preprocess(data, tokenizer)
         ids, masks = tokenized_data['input_ids'], tokenized_data['attention_mask']
         dataset = TensorDataset(ids, masks, labels)
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
     elif mode == 'random':
-        tokenized_data, labels = preprocess(data, tokenizer)
         pos_ids, pos_masks, neg_ids, neg_masks = [], [], [], []
         for i, (ids, mask, label) in enumerate(zip(tokenized_data['input_ids'], \
             tokenized_data['attention_mask'], labels)):
@@ -156,7 +155,7 @@ def data2numpy():
                 
                 sent += '#' + title
 
-                K = 2
+                K = 1
                 for cxt in range(K):
                     sent += get_context(i-K) + get_context(i+K)
 
