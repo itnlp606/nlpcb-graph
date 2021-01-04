@@ -60,7 +60,8 @@ def ner_train(args, tokenizer, array, device):
                 valid_iter = valid_loader
 
             # training process
-            for _, (pos_data, neg_data) in enumerate(train_iter):
+            for kdx, (pos_data, neg_data) in enumerate(train_iter):
+                if kdx == 1: break
                 pos_data = tuple(i.to(device) for i in pos_data)
                 neg_data = tuple(i.to(device) for i in neg_data)
                 pos_ids, pos_masks, _, pos_labels = pos_data
