@@ -86,7 +86,6 @@ def ner_preprocess(data, tokenizer):
 
         all_sents.append(sent)
         all_labels.append(label)
-    raise Exception
 
     all_tokenized_sents = tokenizer(all_sents, padding=True, truncation=True,\
         return_offsets_mapping=True, return_tensors='pt')
