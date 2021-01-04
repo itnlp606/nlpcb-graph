@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from tqdm import tqdm
 from utils.constants import *
 from transformers import AutoModelForSequenceClassification, AutoModelForTokenClassification
 
@@ -15,7 +16,7 @@ class BERTNER(nn.Module):
     def calculate_F1(self, pred_logits, pred_labels):
         total_true, total_pred, pred_true = 0, 0, 0
         # for each element in list
-        for logits, labels in zip(pred_logits, pred_labels):
+        for logits, labels in tqdm(zip(pred_logits, pred_labels), total=len(pred_logits)):
             # argmax后会降维
             logits = torch.argmax(logits, 2)
 
@@ -30,7 +31,7 @@ class BERTNER(nn.Module):
                         while j < len(true) and true[j] == 2:
                             j += 1
                         trues.append((i, j))
-                    i += 1
+                    i = j
                 # pred预测的实体
                 i = 0
                 while i < len(pred):
@@ -39,7 +40,7 @@ class BERTNER(nn.Module):
                         while j < len(pred) and pred[j] == 2:
                             j += 1
                         preds.append((i, j))
-                    i += 1
+                    i = j
 
                 for pd in preds:
                     if pd in trues:
