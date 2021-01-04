@@ -155,3 +155,6 @@ def clas_train(args, tokenizer, array, device):
                             if args.save_models:
                                 torch.save(best_model, args.model_dir + '/MOD' + str(fold) + '_' + str(best_epoch))
                             break
+
+                if i == args.max_epoches-1 and args.save_models:
+                    torch.save(best_model, args.model_dir + '/MOD' + str(fold) + '_' + str(best_epoch))
