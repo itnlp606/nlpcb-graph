@@ -27,7 +27,7 @@ class BERTNER(nn.Module):
                 while i < len(true):
                     if true[i] == 1:
                         j = i+1
-                        while j < len(true) and true[j] == 1:
+                        while j < len(true) and true[j] == 2:
                             j += 1
                         trues.append((i, j))
                     i += 1
@@ -38,7 +38,7 @@ class BERTNER(nn.Module):
                 while i < len(pred):
                     if pred[i] == 1:
                         j = i+1
-                        while j < len(pred) and pred[j] == 1:
+                        while j < len(pred) and pred[j] == 2:
                             j += 1
                         preds.append((i, j))
                     i += 1
@@ -52,6 +52,8 @@ class BERTNER(nn.Module):
                 total_pred += len(preds)
 
                 print(total_true, total_pred, pred_true)
+
+            raise Exception
 
 class BERTCLAS(nn.Module):
     def __init__(self, args):
