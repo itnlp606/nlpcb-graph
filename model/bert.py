@@ -9,7 +9,7 @@ class BERTNER(nn.Module):
         self.emission = AutoModelForTokenClassification.from_pretrained(args.model_name_or_path, \
             cache_dir=args.pretrained_cache_dir, num_labels=len(NER_ID2LABEL))
         
-    def forward(self, *args):
+    def forward(self, ids, masks, labels):
         return self.emission(input_ids=ids, attention_mask=masks, labels=labels)
  
     def calculate_F1(self, pred_logits, pred_labels):
