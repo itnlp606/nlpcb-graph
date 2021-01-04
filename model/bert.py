@@ -26,8 +26,8 @@ class BERTNER(nn.Module):
                 # 看true预测的实体， 每个i是1*1 tensor
                 i = 0
                 while i < len(true):
+                    j = i+1
                     if true[i] == 1:
-                        j = i+1
                         while j < len(true) and true[j] == 2:
                             j += 1
                         trues.append((i, j))
@@ -35,8 +35,8 @@ class BERTNER(nn.Module):
                 # pred预测的实体
                 i = 0
                 while i < len(pred):
+                    j = i+1
                     if pred[i] == 1:
-                        j = i+1
                         while j < len(pred) and pred[j] == 2:
                             j += 1
                         preds.append((i, j))
