@@ -2,9 +2,10 @@ import torch
 import pickle
 import pandas as pd
 from utils.args import get_parser
-from processor.train import train
 from processor.predict import predict
 from transformers import AutoTokenizer
+from processor.ner_train import ner_train
+from processor.clas_train import clas_train
 from reader.reader import data2numpy, clas_tensorize, ner_tensorize
 
 if __name__ == '__main__':
@@ -31,8 +32,10 @@ if __name__ == '__main__':
 
     if args.task == 'clas':
         array = clas_array
+        train = clas_train
     else:
         array = ner_array
+        train = ner_train
 
     if args.do_train:
         train(args, tokenizer, array, device)
