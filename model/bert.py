@@ -21,7 +21,7 @@ class BERTNER(nn.Module):
 
             # logits, labels shape: (16, 414)
             for pred, true in zip(logits, labels):
-                trues = []
+                trues, preds = [], []
                 # 看true预测的实体， 每个i是1*1 tensor
                 i = 0
                 while i < len(true):
@@ -33,6 +33,26 @@ class BERTNER(nn.Module):
                     i += 1
                 print(true, trues)
 
+                # pred预测的实体
+                i = 0
+                while i < len(pred):
+                    if pred[i] == 1:
+                        j = i+1
+                        while j < len(pred) and pred[j] == 1:
+                            j += 1
+                        preds.append((i, j))
+                    i += 1
+
+                print(pred, preds)
+
+                for pd in preds:
+                    if pd in trues:
+                        pred_true += 1
+                total_true += len(trues)
+                total_pred += len(preds)
+
+                print(total_true, total_pred, pred_true)
+                
                 raise Exception
 
 class BERTCLAS(nn.Module):
