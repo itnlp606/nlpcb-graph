@@ -16,8 +16,19 @@ class BERTNER(nn.Module):
         total_true, total_pred, pred_true = 0, 0, 0
         # for each element in list
         for logits, labels in zip(pred_logits, pred_labels):
+            logits = torch.argmax(logits, 2)
             print(logits.shape, labels.shape)
             raise Exception
+
+            # logits, labels shape: 16 414
+            for pred, true in zip(logits, labels):
+                pred, true = pred.item(), true.item()
+                if pred >= 1 and true >= 1:
+                    pred_true += 1
+                if pred >= 1:
+                    total_pred += 1
+                if true >= 1:
+                    total_true += 1
 
 class BERTCLAS(nn.Module):
     def __init__(self, args):

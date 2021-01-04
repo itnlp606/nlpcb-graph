@@ -14,7 +14,7 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
     all_tokenized_sents, all_labels = ner_preprocess(data, tokenizer)
     if mode == 'seq':    
-        dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['attention_mask'],\
+        dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['achar_labelention_mask'],\
             all_tokenized_sents['offset_mapping'], all_labels)
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
@@ -23,7 +23,7 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
         pos_ids, pos_map, pos_mask, pos_labels, neg_ids, neg_map, neg_mask, neg_labels = \
             [], [], [], [], [], [], [], []
         for ids, mask, maps, label in zip(all_tokenized_sents['input_ids'], \
-            all_tokenized_sents['attention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
+            all_tokenized_sents['achar_labelention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
             sm = torch.sum(label)
             if sm > 0:
                 pos_ids.append(ids)
@@ -51,30 +51,42 @@ def ner_preprocess(data, tokenizer):
     sents, labs = [], []
     for sent, lab in data:
         sents.append(sent)
-        tt = [NER_LABEL2ID['O'] for _ in range(len(sent))]
+        char_label = [NER_LABEL2ID['O'] for _ in range(len(sent))]
         for tup in lab:
             start, end, word = tup
             # if sent[start:end] != word:
             #     raise Exception('wrong match')
-            tt[start] = NER_LABEL2ID['B']
+            char_label[start] = NER_LABEL2ID['B']
             for i in range(start+1, end):
-                tt[i] = NER_LABEL2ID['I']
+                char_label[i] = NER_LABEL2ID['I']
         if lab == []:
-            labs.append(tt)
+            labs.append((char_label, lab))
         else:
-            labs.append(tt)
+            labs.append((char_label, lab))
 
     all_sents, all_labels = [], []
-    for sent, tt in zip(sents, labs):
+    for sent, (char_label, lab) in zip(sents, labs):
         tokenized_sent = tokenizer(sent, return_offsets_mapping=True)
         label = []
         for idx, mp in enumerate(tokenized_sent['offset_mapping']):
             if idx > 0 and mp[0] == 0 and mp[1] == 0:
                 break
+            elif idx == 0: 
+                label.append(0)
             else:
-                label.append(tt[mp[0]])
+                ret = char_label[mp[0]]
+                if ret == 1:
+                    if mp[0] == 0: label.append(ret)
+                    elif mp[0] > 0:
+                        if char_label[mp[0]-1] == 1:
+                            label.append(NER_LABEL2ID['I'])
+                        else:
+                            label.append(ret)
+                else: label.append(ret)
+
         all_sents.append(sent)
         all_labels.append(label)
+    raise Exception
 
     all_tokenized_sents = tokenizer(all_sents, padding=True, truncation=True,\
         return_offsets_mapping=True, return_tensors='pt')
@@ -89,14 +101,14 @@ def clas_tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
     tokenized_data, labels = clas_preprocess(data, tokenizer)
     if mode == 'seq':
-        ids, masks = tokenized_data['input_ids'], tokenized_data['attention_mask']
+        ids, masks = tokenized_data['input_ids'], tokenized_data['achar_labelention_mask']
         dataset = TensorDataset(ids, masks, labels)
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
     elif mode == 'random':
         pos_ids, pos_masks, neg_ids, neg_masks = [], [], [], []
         for i, (ids, mask, label) in enumerate(zip(tokenized_data['input_ids'], \
-            tokenized_data['attention_mask'], labels)):
+            tokenized_data['achar_labelention_mask'], labels)):
             ids = ids
             mask = mask
             if label >= 1:
@@ -147,7 +159,7 @@ def data2numpy():
 
         # process
         articles = os.listdir('data/'+task)
-        pattern = 'Stanza-out.txt'
+        pachar_labelern = 'Stanza-out.txt'
         paragraph_pat = 'Grobid-out.txt'
         sent_pat = 'sentences.txt'
         entity_pat = 'entities.txt'
@@ -156,7 +168,7 @@ def data2numpy():
             # 提取句子文件
             files = os.listdir('data/'+task+'/'+article)
             for f in files:
-                if pattern in f:
+                if pachar_labelern in f:
                     name = f
                 if paragraph_pat in f:
                     para_name = f
