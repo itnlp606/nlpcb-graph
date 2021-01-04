@@ -30,6 +30,7 @@ class BERTNER(nn.Module):
                         while j < len(true) and true[j] == 1:
                             j += 1
                         trues.append((i, j))
+                    i += 1
                 print(true, trues)
 
                 raise Exception
