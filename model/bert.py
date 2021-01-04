@@ -52,8 +52,6 @@ class BERTNER(nn.Module):
                 total_pred += len(preds)
 
                 print(total_true, total_pred, pred_true)
-                
-                raise Exception
 
 class BERTCLAS(nn.Module):
     def __init__(self, args):
