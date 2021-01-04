@@ -2,22 +2,30 @@ import copy
 import torch
 from time import time
 from tqdm import tqdm
-from model.bert import BERT
+from model.bert import BERTCLAS, BERTNER
 from model.fgm import FGM
 from model.pgd import PGD
 from torch.optim import swa_utils
 from utils.optim import get_optimizer_scheduler
-from reader.reader import tensorize, divide_dataset
+from utils.utils import divide_dataset
+from reader.reader import clas_tensorize, ner_tensorize
 
 def train(args, tokenizer, array, device):
+    # decide tensorize, model based on task
+    if args.task == 'clas':
+        tensorize = clas_tensorize
+        BERT = BERTCLAS
+    elif args.task == 'ner':
+        tensorize = ner_tensorize
+        BERT = BERTNER
+
     # do k-fold
     if len(args.fold) == 1: folds = [args.fold[0]]
     else: folds = range(args.fold[0], args.fold[1]+1)
 
     for fold in folds:
         # new model for each fold
-        model = BERT(args).to(device)
-        print('training start.. on fold', fold)
+        model = BERT(args, device).to(device)
 
         if args.avg_steps:
             swa_model = swa_utils.AveragedModel(model, device)
@@ -45,6 +53,8 @@ def train(args, tokenizer, array, device):
         stop_ct, best_F1, best_model, best_epoch = 0, 0, None, -1
         train_losses = 0
         start_time = time()
+
+        print('training start.. on fold', fold)
         for i in range(args.max_epoches):
             model.train()
 
@@ -59,19 +69,10 @@ def train(args, tokenizer, array, device):
                 valid_iter = valid_loader
 
             # training process
-            for _, (pos_data, neg_data) in enumerate(train_iter):
-                pos_data = tuple(i.to(device) for i in pos_data)
-                neg_data = tuple(i.to(device) for i in neg_data)
-                pos_ids, pos_masks, pos_labels = pos_data
-                neg_ids, neg_masks, neg_labels = neg_data
-
-                # concat
-                ids = torch.cat((pos_ids, neg_ids), dim=0)
-                masks = torch.cat((pos_masks, neg_masks), dim=0)
-                labels = torch.cat((pos_labels, neg_labels), dim=0)
-
+            for kdx, (pos_data, neg_data) in enumerate(train_iter):
+                if kdx == 1: break
                 model.zero_grad()
-                loss, logits = model(ids, masks, labels).to_tuple()
+                loss, logits = model(pos_data, neg_data).to_tuple()
                 if args.use_at == 'pgd':
                     _, _, ori_F1 = model.calculate_F1([logits], [labels])
 
@@ -82,7 +83,7 @@ def train(args, tokenizer, array, device):
                 # fgm adversial training
                 if args.use_at == 'fgm':
                     fgm.attack()
-                    loss_adv, _ = model(ids, masks, labels).to_tuple()
+                    loss_adv, _ = model(pos_data, neg_data).to_tuple()
                     loss_adv.backward()
                     fgm.restore()
 
@@ -95,7 +96,7 @@ def train(args, tokenizer, array, device):
                             model.zero_grad()
                         else:
                             pgd.restore_grad()
-                        loss_adv, at_logits = model(ids, masks, labels).to_tuple()
+                        loss_adv, at_logits = model(pos_data, neg_data).to_tuple()
                         _, _, new_F1 = model.calculate_F1([at_logits], [labels])
                         loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
                         if new_F1 < ori_F1:
@@ -117,23 +118,7 @@ def train(args, tokenizer, array, device):
                     swa_model.update_parameters(model)
                 with torch.no_grad():
                     valid_model.eval()
-                    valid_losses = 0
-                    pred_logits, pred_labels = [], []
-                    for idx, batch_data in enumerate(valid_iter):
-                        batch_data = tuple(i.to(device) for i in batch_data)
-                        ids, masks, labels = batch_data
-                        
-                        loss, logits = valid_model(ids, masks, labels).to_tuple()
-
-                        pred_logits.append(logits)
-                        pred_labels.append(labels)
-
-                        # process loss
-                        valid_losses += loss.item()
-
-                    valid_losses /= len(valid_loader)
-
-                    precision, recall, F1 = valid_module.calculate_F1(pred_logits, pred_labels)
+                    precision, recall, F1, valid_losses = valid_module.calculate_F1(valid_iter, valid_model)
             
                 if args.save_models and args.avg_steps > 0:
                     torch.save(valid_module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))

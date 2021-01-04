@@ -5,7 +5,7 @@ from utils.args import get_parser
 from processor.train import train
 from processor.predict import predict
 from transformers import AutoTokenizer
-from reader.reader import data2numpy
+from reader.reader import data2numpy, clas_tensorize, ner_tensorize
 
 if __name__ == '__main__':
     args = get_parser()
@@ -17,7 +17,7 @@ if __name__ == '__main__':
     # read data
     # with open('array.pkl', 'rb') as f:
     #     array = pickle.load(f)
-    array = data2numpy()
+    clas_array, ner_array = data2numpy()
 
     # GPU device
     if torch.cuda.is_available() and args.use_cuda:
@@ -28,6 +28,11 @@ if __name__ == '__main__':
         name = 'cpu'
     
     print("Running on", name)
+
+    if args.task == 'clas':
+        array = clas_array
+    else:
+        array = ner_array
 
     if args.do_train:
         train(args, tokenizer, array, device)

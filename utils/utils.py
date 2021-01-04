@@ -1,4 +1,4 @@
-from numpy import mean
+import numpy as np
 from datetime import datetime
 import os
 
@@ -8,7 +8,7 @@ class CountSmooth:
         self.max_steps = max_steps
 
     def get(self):
-        return mean(self.q)
+        return np.mean(self.q)
 
     def add(self, value):
         if len(self.q) > self.max_steps:
@@ -47,6 +47,16 @@ def clear_dir(dir):
     files = [os.path.join(dir, f) for f in os.listdir(dir)]
     for f in files:
         os.remove(f)
+
+def divide_dataset(array, num_fold, fold):
+    np.random.seed(2233)
+    np.random.shuffle(array)
+    block_len = int(array.shape[0]/10)
+
+    num_blocks = num_fold-fold
+    start = block_len*num_blocks
+    a = np.vstack([array[0:start], array[start+block_len:]])
+    return a, array[start:start+block_len]
         
 if __name__ == '__main__':
     print(strftime())

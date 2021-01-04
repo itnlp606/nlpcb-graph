@@ -1,9 +1,10 @@
 import torch
 import pandas as pd
 import transformers
-from model.bert import BERT
+from model.bert import BERTCLAS
 from utils.utils import print_execute_time
-from reader.reader import tensorize, divide_dataset
+from reader.reader import clas_tensorize
+from utils.utils import divide_dataset
 
 @print_execute_time
 def predict(args, tokenizer, array, device):

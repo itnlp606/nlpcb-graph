@@ -25,3 +25,15 @@ ID2LABEL = {
     10:'experimental-setup',
     11:'approach'
 }
+
+NER_LABEL2ID = {
+    'O': 0,
+    'B':1,
+    'I':2
+}
+
+NER_ID2LABEL = {
+    0:'O',
+    1:'B',
+    2:'I'
+}

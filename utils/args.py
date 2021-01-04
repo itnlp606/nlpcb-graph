@@ -5,7 +5,6 @@ from os.path import join
 from loguru import logger
 from typing import List
 
-
 def get_parser():
     parser = argparse.ArgumentParser()
 
@@ -18,6 +17,7 @@ def get_parser():
     parser.add_argument("--pretrained_cache_dir", type=str, default='pretrained_models')
 
     ## training args
+    parser.add_argument("--task", type=str)
     parser.add_argument("--do_train", type=int, action='store')
     parser.add_argument("--max_epoches", type=int, default=10)
     parser.add_argument("--max_steps", type=int, default=200000)
