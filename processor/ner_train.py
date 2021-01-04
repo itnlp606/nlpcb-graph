@@ -63,8 +63,8 @@ def ner_train(args, tokenizer, array, device):
             for _, (pos_data, neg_data) in enumerate(train_iter):
                 pos_data = tuple(i.to(device) for i in pos_data)
                 neg_data = tuple(i.to(device) for i in neg_data)
-                pos_ids, pos_masks, pos_labels = pos_data
-                neg_ids, neg_masks, neg_labels = neg_data
+                pos_ids, pos_masks, _, pos_labels = pos_data
+                neg_ids, neg_masks, _, neg_labels = neg_data
 
                 # concat
                 ids = torch.cat((pos_ids, neg_ids), dim=0)
@@ -122,7 +122,7 @@ def ner_train(args, tokenizer, array, device):
                     pred_logits, pred_labels = [], []
                     for idx, batch_data in enumerate(valid_iter):
                         batch_data = tuple(i.to(device) for i in batch_data)
-                        ids, masks, labels = batch_data
+                        ids, masks, maps, labels = batch_data
                         
                         loss, logits = valid_model(ids, masks, labels).to_tuple()
 

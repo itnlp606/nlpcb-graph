@@ -4,7 +4,7 @@ from utils.constants import *
 from transformers import AutoModelForSequenceClassification, AutoModelForTokenClassification
 
 class BERTNER(nn.Module):
-    def __init__(self, args, device):
+    def __init__(self, args):
         super(BERTNER, self).__init__()
         self.emission = AutoModelForTokenClassification.from_pretrained(args.model_name_or_path, \
             cache_dir=args.pretrained_cache_dir, num_labels=len(NER_ID2LABEL))

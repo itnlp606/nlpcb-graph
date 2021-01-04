@@ -70,14 +70,14 @@ def ner_preprocess(data, tokenizer):
         all_sents.append(sent)
         all_labels.append(label)
 
-    pos_tokenized_sents = tokenizer(pos_sents, padding=True,  return_offsets_mapping=True,\
-        return_tensors='pt', truncation=True)
-    neg_tokenized_sents = tokenizer(neg_sents, padding=True,  return_offsets_mapping=True,\
-        return_tensors='pt', truncation=True)
-    all_tokenized_sents = tokenizer(all_sents, padding=True,  return_offsets_mapping=True,\
-        return_tensors='pt', truncation=True)
+    pos_tokenized_sents = tokenizer(pos_sents, padding=True, truncation=True,\
+        return_offsets_mapping=True, return_tensors='pt')
+    neg_tokenized_sents = tokenizer(neg_sents, padding=True, truncation=True,\
+        return_offsets_mapping=True, return_tensors='pt')
+    all_tokenized_sents = tokenizer(all_sents, padding=True, truncation=True,\
+        return_offsets_mapping=True, return_tensors='pt')
     pos_seq_len, neg_seq_len, all_seq_len = pos_tokenized_sents['input_ids'].shape[1], \
-        neg_tokenized_sents['input_ids'].shape[1], all_tokenized_sents['input_ids']
+        neg_tokenized_sents['input_ids'].shape[1], all_tokenized_sents['input_ids'].shape[1]
 
     for label in pos_labels:
         label.extend([0]*(pos_seq_len - len(label)))
