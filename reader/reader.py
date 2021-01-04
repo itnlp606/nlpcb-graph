@@ -24,9 +24,9 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
             _ = ner_preprocess(data, tokenizer)
         
         # construct data loader
-        pos_dataset = TensorDataset(pos_tokenized_sents['input_ids'], pos_tokenized_sents['attention_amask'],\
+        pos_dataset = TensorDataset(pos_tokenized_sents['input_ids'], pos_tokenized_sents['attention_mask'],\
             pos_tokenized_sents['offset_mapping'], pos_labels)        
-        neg_dataset = TensorDataset(neg_tokenized_sents['input_ids'], neg_tokenized_sents['attention_amask'],\
+        neg_dataset = TensorDataset(neg_tokenized_sents['input_ids'], neg_tokenized_sents['attention_mask'],\
             neg_tokenized_sents['offset_mapping'], neg_labels)
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
         pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=3)

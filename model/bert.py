@@ -13,7 +13,11 @@ class BERTNER(nn.Module):
         return self.emission(input_ids=ids, attention_mask=masks, labels=labels)
  
     def calculate_F1(self, pred_logits, pred_labels):
-        pass
+        total_true, total_pred, pred_true = 0, 0, 0
+        # for each element in list
+        for logits, labels in zip(pred_logits, pred_labels):
+            print(logits.shape, labels.shape)
+            raise Exception
 
 class BERTCLAS(nn.Module):
     def __init__(self, args):
