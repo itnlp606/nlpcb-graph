@@ -14,7 +14,7 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
     all_tokenized_sents, all_labels = ner_preprocess(data, tokenizer)
     if mode == 'seq':    
-        dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['achar_labelention_mask'],\
+        dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['attention_mask'],\
             all_tokenized_sents['offset_mapping'], all_labels)
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
@@ -23,7 +23,7 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
         pos_ids, pos_map, pos_mask, pos_labels, neg_ids, neg_map, neg_mask, neg_labels = \
             [], [], [], [], [], [], [], []
         for ids, mask, maps, label in zip(all_tokenized_sents['input_ids'], \
-            all_tokenized_sents['achar_labelention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
+            all_tokenized_sents['attention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
             sm = torch.sum(label)
             if sm > 0:
                 pos_ids.append(ids)
@@ -100,14 +100,14 @@ def clas_tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
     tokenized_data, labels = clas_preprocess(data, tokenizer)
     if mode == 'seq':
-        ids, masks = tokenized_data['input_ids'], tokenized_data['achar_labelention_mask']
+        ids, masks = tokenized_data['input_ids'], tokenized_data['attention_mask']
         dataset = TensorDataset(ids, masks, labels)
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
     elif mode == 'random':
         pos_ids, pos_masks, neg_ids, neg_masks = [], [], [], []
         for i, (ids, mask, label) in enumerate(zip(tokenized_data['input_ids'], \
-            tokenized_data['achar_labelention_mask'], labels)):
+            tokenized_data['attention_mask'], labels)):
             ids = ids
             mask = mask
             if label >= 1:
@@ -158,7 +158,7 @@ def data2numpy():
 
         # process
         articles = os.listdir('data/'+task)
-        pachar_labelern = 'Stanza-out.txt'
+        pattern = 'Stanza-out.txt'
         paragraph_pat = 'Grobid-out.txt'
         sent_pat = 'sentences.txt'
         entity_pat = 'entities.txt'
@@ -167,7 +167,7 @@ def data2numpy():
             # 提取句子文件
             files = os.listdir('data/'+task+'/'+article)
             for f in files:
-                if pachar_labelern in f:
+                if pattern in f:
                     name = f
                 if paragraph_pat in f:
                     para_name = f
