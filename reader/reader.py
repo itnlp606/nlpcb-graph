@@ -12,22 +12,35 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 
 def ner_tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
+    all_tokenized_sents, all_labels = ner_preprocess(data, tokenizer)
     if mode == 'seq':    
-        _, _, all_tokenized_sents, _, _, all_labels = ner_preprocess(data, tokenizer)
         dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['attention_mask'],\
             all_tokenized_sents['offset_mapping'], all_labels)
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
 
     elif mode == 'random':
-        pos_tokenized_sents, neg_tokenized_sents, _, pos_labels, neg_labels,\
-            _ = ner_preprocess(data, tokenizer)
+        pos_ids, pos_map, pos_mask, pos_labels, neg_ids, neg_map, neg_mask, neg_labels = \
+            [], [], [], [], [], [], [], []
+        for ids, mask, maps, label in zip(all_tokenized_sents['input_ids'], \
+            all_tokenized_sents['attention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
+            sm = torch.sum(label)
+            if sm > 0:
+                pos_ids.append(ids)
+                pos_map.append(maps)
+                pos_mask.append(mask)
+                pos_labels.append(label)
+            else:
+                neg_ids.append(ids)
+                neg_map.append(maps)
+                neg_mask.append(mask)
+                neg_labels.append(label)
         
         # construct data loader
-        pos_dataset = TensorDataset(pos_tokenized_sents['input_ids'], pos_tokenized_sents['attention_mask'],\
-            pos_tokenized_sents['offset_mapping'], pos_labels)        
-        neg_dataset = TensorDataset(neg_tokenized_sents['input_ids'], neg_tokenized_sents['attention_mask'],\
-            neg_tokenized_sents['offset_mapping'], neg_labels)
+        pos_dataset = TensorDataset(torch.tensor(pos_ids), torch.tensor(pos_mask),\
+            torch.tensor(pos_map), torch.tensor(pos_labels))     
+        neg_dataset = TensorDataset(torch.tensor(neg_ids), torch.tensor(neg_mask),\
+            torch.tensor(neg_map), torch.tensor(neg_labels))  
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
         pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=3)
         neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=5)
@@ -47,13 +60,12 @@ def ner_preprocess(data, tokenizer):
             for i in range(start+1, end):
                 tt[i] = NER_LABEL2ID['I']
         if lab == []:
-            labs.append((tt, 'neg'))
+            labs.append(tt)
         else:
-            labs.append((tt, 'pos'))
+            labs.append(tt)
 
     all_sents, all_labels = [], []
-    pos_sents, neg_sents, pos_labels, neg_labels = [], [], [], []
-    for sent, (tt, tag) in zip(sents, labs):
+    for sent, tt in zip(sents, labs):
         tokenized_sent = tokenizer(sent, return_offsets_mapping=True)
         label = []
         for idx, mp in enumerate(tokenized_sent['offset_mapping']):
@@ -61,33 +73,17 @@ def ner_preprocess(data, tokenizer):
                 break
             else:
                 label.append(tt[mp[0]])
-        if tag == 'pos':
-            pos_sents.append(sent)
-            pos_labels.append(label)
-        else:
-            neg_sents.append(sent)
-            neg_labels.append(label)
         all_sents.append(sent)
         all_labels.append(label)
 
-    pos_tokenized_sents = tokenizer(pos_sents, padding=True, truncation=True,\
-        return_offsets_mapping=True, return_tensors='pt')
-    neg_tokenized_sents = tokenizer(neg_sents, padding=True, truncation=True,\
-        return_offsets_mapping=True, return_tensors='pt')
     all_tokenized_sents = tokenizer(all_sents, padding=True, truncation=True,\
         return_offsets_mapping=True, return_tensors='pt')
-    pos_seq_len, neg_seq_len, all_seq_len = pos_tokenized_sents['input_ids'].shape[1], \
-        neg_tokenized_sents['input_ids'].shape[1], all_tokenized_sents['input_ids'].shape[1]
+    all_seq_len = all_tokenized_sents['input_ids'].shape[1]
 
-    for label in pos_labels:
-        label.extend([0]*(pos_seq_len - len(label)))
-    for label in neg_labels:
-        label.extend([0]*(neg_seq_len - len(label)))
     for label in all_labels:
         label.extend([0]*(all_seq_len - len(label)))
 
-    return pos_tokenized_sents, neg_tokenized_sents, all_tokenized_sents,\
-        torch.tensor(pos_labels), torch.tensor(neg_labels), torch.tensor(all_labels)
+    return all_tokenized_sents, torch.tensor(all_labels)
 
 def clas_tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
