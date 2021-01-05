@@ -10,12 +10,10 @@ class BERTNER(nn.Module):
         super(BERTNER, self).__init__()
         self.emission = AutoModelForTokenClassification.from_pretrained(args.model_name_or_path, \
             cache_dir=args.pretrained_cache_dir, num_labels=len(NER_ID2LABEL))
-        self.crf = CRF(len(NER_ID2LABEL))
+        self.crf = CRF(len(NER_ID2LABEL), batch_first=True)
         
     def forward(self, ids, masks, labels):
         _, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
-        logits = logits.permute(1,0,2)
-        print(logits.shape, labels.shape, masks.shape)
         loss = -self.crf(logits.permute(1,0,2), labels, masks)
         logits = self.crf.decode(logits)
         return loss, logits
