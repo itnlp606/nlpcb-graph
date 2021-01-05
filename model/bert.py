@@ -16,7 +16,7 @@ class BERTNER(nn.Module):
         _, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
         loss = -self.crf(logits, labels, masks)
         logits = self.crf.viterbi_tags(logits, masks)
-        print(logits.shape)
+        print(logits, loss)
         return loss, logits
  
     def calculate_F1(self, pred_logits, pred_labels):
