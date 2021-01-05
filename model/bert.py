@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from tqdm import tqdm
+from torchcrf import CRF
 from utils.constants import *
 from transformers import AutoModelForSequenceClassification, AutoModelForTokenClassification
 
@@ -9,9 +10,13 @@ class BERTNER(nn.Module):
         super(BERTNER, self).__init__()
         self.emission = AutoModelForTokenClassification.from_pretrained(args.model_name_or_path, \
             cache_dir=args.pretrained_cache_dir, num_labels=len(NER_ID2LABEL))
+        self.crf = CRF(len(NER_ID2LABEL))
         
     def forward(self, ids, masks, labels):
-        return self.emission(input_ids=ids, attention_mask=masks, labels=labels)
+        _, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels)
+        loss = self.crf(logits, labels, mask=masks)
+        logits = self.crf.decode(logits)
+        return loss, logits
  
     def calculate_F1(self, pred_logits, pred_labels):
         total_true, total_pred, pred_true = 0, 0, 0
