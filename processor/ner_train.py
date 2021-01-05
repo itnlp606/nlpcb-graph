@@ -73,7 +73,7 @@ def ner_train(args, tokenizer, array, device):
                 labels = torch.cat((pos_labels, neg_labels), dim=0)
 
                 model.zero_grad()
-                loss, logits = model(ids, masks, labels).to_tuple()
+                loss, logits = model(ids, masks, labels)
                 if args.use_at == 'pgd':
                     _, _, ori_F1 = model.calculate_F1([logits], [labels])
 
@@ -84,7 +84,7 @@ def ner_train(args, tokenizer, array, device):
                 # fgm adversial training
                 if args.use_at == 'fgm':
                     fgm.attack()
-                    loss_adv, _ = model(ids, masks, labels).to_tuple()
+                    loss_adv, _ = model(ids, masks, labels)
                     loss_adv.backward()
                     fgm.restore()
 
@@ -97,7 +97,7 @@ def ner_train(args, tokenizer, array, device):
                             model.zero_grad()
                         else:
                             pgd.restore_grad()
-                        loss_adv, at_logits = model(ids, masks, labels).to_tuple()
+                        loss_adv, at_logits = model(ids, masks, labels)
                         _, _, new_F1 = model.calculate_F1([at_logits], [labels])
                         loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
                         if new_F1 < ori_F1:
@@ -125,7 +125,7 @@ def ner_train(args, tokenizer, array, device):
                         batch_data = tuple(i.to(device) for i in batch_data)
                         ids, masks, maps, labels = batch_data
                         
-                        loss, logits = valid_model(ids, masks, labels).to_tuple()
+                        loss, logits = valid_model(ids, masks, labels)
 
                         pred_logits.append(logits)
                         pred_labels.append(labels)

@@ -13,8 +13,8 @@ class BERTNER(nn.Module):
         self.crf = CRF(len(NER_ID2LABEL))
         
     def forward(self, ids, masks, labels):
-        _, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels)
-        loss = self.crf(logits, labels, mask=masks)
+        _, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
+        loss = self.crf(logits, labels, masks)
         logits = self.crf.decode(logits)
         return loss, logits
  
@@ -68,7 +68,7 @@ class BERTCLAS(nn.Module):
             cache_dir=args.pretrained_cache_dir, num_labels=2)
         
     def forward(self, ids, masks, labels):
-        return self.emission(input_ids=ids, attention_mask=masks, labels=labels)
+        return self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
     
     def calculate_F1(self, pred_logits, pred_labels):
         total_true, total_pred, pred_true = 0, 0, 0
