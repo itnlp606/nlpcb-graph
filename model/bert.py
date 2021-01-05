@@ -14,8 +14,8 @@ class BERTNER(nn.Module):
         
     def forward(self, ids, masks, labels):
         _, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
-        print(logits.shape, labels.dtype, masks.dtype)
-        loss = -self.crf(logits, labels, masks)
+        # print(logits.shape, labels.dtype, masks.dtype)
+        loss = -self.crf(logits.permute(1,0,2), labels, masks)
         logits = self.crf.decode(logits)
         return loss, logits
  
