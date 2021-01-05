@@ -16,7 +16,7 @@ class BERTNER(nn.Module):
     def calculate_F1(self, pred_logits, pred_labels):
         total_true, total_pred, pred_true = 0, 0, 0
         # for each element in list
-        for logits, labels in tqdm(zip(pred_logits, pred_labels), total=len(pred_logits)):
+        for logits, labels in zip(pred_logits, pred_labels), total=len(pred_logits):
             # argmax后会降维
             logits = torch.argmax(logits, 2)
 
