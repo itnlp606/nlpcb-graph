@@ -13,10 +13,14 @@ class BERTNER(nn.Module):
         self.crf = ConditionalRandomField(len(NER_ID2LABEL), include_start_end_transitions=False)
         
     def forward(self, ids, masks, labels):
-        _, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
-        loss = -self.crf(logits, labels, masks)
-        logits = self.crf.viterbi_tags(logits, masks)
-        print(logits, loss)
+        loss, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
+
+        if self.args.use_crf:        
+            loss = -self.crf(logits, labels, masks)
+            logits = self.crf.viterbi_tags(logits, masks)
+            return loss, logits
+
+        logits = torch.argmax(logits, 2)
         return loss, logits
  
     def calculate_F1(self, pred_logits, pred_labels):
@@ -24,7 +28,6 @@ class BERTNER(nn.Module):
         # for each element in list
         for logits, labels in zip(pred_logits, pred_labels):
             # argmax后会降维
-            logits = torch.argmax(logits, 2)
 
             # logits, labels shape: (16, 414)
             for pred, true in zip(logits, labels):

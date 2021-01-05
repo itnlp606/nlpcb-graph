@@ -60,6 +60,7 @@ def get_parser():
     parser.add_argument("--load_limit", type=int, default=0)
 
     ## task specified
+    parser.add_argument("--use_crf", type=int, default=0)
     parser.add_argument("--use_at", type=str, default='none')
     parser.add_argument("--select_methods", type=str, default='mean')
     parser.add_argument("--eval_num", type=int, default=500)
