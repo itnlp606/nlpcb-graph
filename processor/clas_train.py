@@ -72,7 +72,7 @@ def clas_train(args, tokenizer, array, device):
                 labels = torch.cat((pos_labels, neg_labels), dim=0)
 
                 model.zero_grad()
-                loss, logits = model(ids, masks, labels).to_tuple()
+                loss, logits = model(ids, masks, labels)
                 if args.use_at == 'pgd':
                     _, _, ori_F1 = model.calculate_F1([logits], [labels])
 
