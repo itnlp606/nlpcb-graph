@@ -11,7 +11,8 @@ class BERTNER(nn.Module):
         super(BERTNER, self).__init__()
         self.emission = AutoModelForTokenClassification.from_pretrained(args.model_name_or_path, \
             cache_dir=args.pretrained_cache_dir, num_labels=len(NER_ID2LABEL))
-        self.crf = ConditionalRandomField(len(NER_ID2LABEL), include_start_end_transitions=False)
+        if self.args.use_crf:
+            self.crf = ConditionalRandomField(len(NER_ID2LABEL), include_start_end_transitions=False)
         
     def forward(self, ids, masks, labels):
         loss, logits = self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
