@@ -62,6 +62,7 @@ def get_parser():
     ## task specified
     parser.add_argument("--use_crf", type=int, default=0)
     parser.add_argument("--use_at", type=str, default='none')
+    parser.add_argument("--pgd_K", type=int, default=3)
     parser.add_argument("--select_methods", type=str, default='mean')
     parser.add_argument("--eval_num", type=int, default=500)
     parser.add_argument("--random_seed", type=int, default=2020)
