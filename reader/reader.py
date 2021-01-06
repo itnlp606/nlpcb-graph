@@ -13,38 +13,40 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 def ner_tensorize(data, tokenizer, args, mode='seq'):
     # divide into tags and texts
     all_tokenized_sents, all_labels = ner_preprocess(data, tokenizer)
+    dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['attention_mask'],\
+        all_tokenized_sents['offset_mapping'], all_labels)
     if mode == 'seq':    
-        dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['attention_mask'],\
-            all_tokenized_sents['offset_mapping'], all_labels)
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
 
     elif mode == 'random':
-        pos_ids, pos_map, pos_mask, pos_labels, neg_ids, neg_map, neg_mask, neg_labels = \
-            [], [], [], [], [], [], [], []
-        for ids, mask, maps, label in zip(all_tokenized_sents['input_ids'], \
-            all_tokenized_sents['attention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
-            sm = torch.sum(label)
-            if sm > 0:
-                pos_ids.append(ids)
-                pos_map.append(maps)
-                pos_mask.append(mask)
-                pos_labels.append(label)
-            else:
-                neg_ids.append(ids)
-                neg_map.append(maps)
-                neg_mask.append(mask)
-                neg_labels.append(label)
+        sampler = RandomSampler(dataset)
+        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
+        # pos_ids, pos_map, pos_mask, pos_labels, neg_ids, neg_map, neg_mask, neg_labels = \
+        #     [], [], [], [], [], [], [], []
+        # for ids, mask, maps, label in zip(all_tokenized_sents['input_ids'], \
+        #     all_tokenized_sents['attention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
+        #     sm = torch.sum(label)
+        #     if sm > 0:
+        #         pos_ids.append(ids)
+        #         pos_map.append(maps)
+        #         pos_mask.append(mask)
+        #         pos_labels.append(label)
+        #     else:
+        #         neg_ids.append(ids)
+        #         neg_map.append(maps)
+        #         neg_mask.append(mask)
+        #         neg_labels.append(label)
         
-        # construct data loader
-        pos_dataset = TensorDataset(torch.stack(pos_ids), torch.stack(pos_mask),\
-            torch.stack(pos_map), torch.stack(pos_labels))     
-        neg_dataset = TensorDataset(torch.stack(neg_ids), torch.stack(neg_mask),\
-            torch.stack(neg_map), torch.stack(neg_labels)) 
-        pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
-        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=12)
-        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=4)
-        return pos_loader, neg_loader
+        # # construct data loader
+        # pos_dataset = TensorDataset(torch.stack(pos_ids), torch.stack(pos_mask),\
+        #     torch.stack(pos_map), torch.stack(pos_labels))     
+        # neg_dataset = TensorDataset(torch.stack(neg_ids), torch.stack(neg_mask),\
+        #     torch.stack(neg_map), torch.stack(neg_labels)) 
+        # pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
+        # pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=12)
+        # neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=4)
+        # return pos_loader, neg_loader
 
 # return tokenized_data, labels
 def ner_preprocess(data, tokenizer):
@@ -59,9 +61,6 @@ def ner_preprocess(data, tokenizer):
             char_label[start] = NER_LABEL2ID['B']
             for i in range(start+1, end):
                 char_label[i] = NER_LABEL2ID['I']
-        if lab == []:
-            labs.append((char_label, lab))
-        else:
             labs.append((char_label, lab))
 
     all_sents, all_labels = [], []
@@ -207,9 +206,7 @@ def data2numpy():
                     sent = sent[:-1]
 
                 # 加特征前处理NER问题
-                if i+1 not in labels:
-                    ner_array.append((sent, []))
-                else:
+                if i+1 in labels:
                     ner_array.append((sent, sentID2entites[i+1]))
 
                 # add feature

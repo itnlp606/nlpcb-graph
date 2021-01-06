@@ -35,9 +35,10 @@ def ner_train(args, tokenizer, array, device):
 
         # new tensorized data and maps
         train_data, valid_data = divide_dataset(args.seed, array, args.num_fold, fold)
-        pos_loader, neg_loader = ner_tensorize(train_data, tokenizer, args, mode='random')
+        # pos_loader, neg_loader = ner_tensorize(train_data, tokenizer, args, mode='random')
+        train_loader = ner_tensorize(train_data, tokenizer, args, mode='random')
         valid_loader = ner_tensorize(valid_data, tokenizer, args, mode='seq')
-        len_train = len(pos_loader)
+        len_train = len(train_loader)
 
         # optim
         training_steps = args.max_epoches*len_train
@@ -52,25 +53,29 @@ def ner_train(args, tokenizer, array, device):
 
             # use tqdm
             if args.use_tqdm:
-                train_iter = tqdm(zip(pos_loader, neg_loader), ncols=50, total=len_train)
+                # train_iter = tqdm(zip(pos_loader, neg_loader), ncols=50, total=len_train)
+                train_iter = tqdm(train_loader, ncols=50)
                 valid_iter = tqdm(valid_loader, ncols=50)
                 train_iter.set_description('Train')
                 valid_iter.set_description('Test')
             else:
-                train_iter = zip(pos_loader, neg_loader)
+                train_iter = train_loader #zip(pos_loader, neg_loader)
                 valid_iter = valid_loader
 
             # training process
             for kdx, (pos_data, neg_data) in enumerate(train_iter):
-                pos_data = tuple(i.to(device) for i in pos_data)
-                neg_data = tuple(i.to(device) for i in neg_data)
-                pos_ids, pos_masks, _, pos_labels = pos_data
-                neg_ids, neg_masks, _, neg_labels = neg_data
+            for kdx, batch_data in enumerate(train_iter):
+                # pos_data = tuple(i.to(device) for i in pos_data)
+                # neg_data = tuple(i.to(device) for i in neg_data)
+                # pos_ids, pos_masks, _, pos_labels = pos_data
+                # neg_ids, neg_masks, _, neg_labels = neg_data
 
-                # concat
-                ids = torch.cat((pos_ids, neg_ids), dim=0)
-                masks = torch.cat((pos_masks, neg_masks), dim=0)
-                labels = torch.cat((pos_labels, neg_labels), dim=0)
+                # # concat
+                # ids = torch.cat((pos_ids, neg_ids), dim=0)
+                # masks = torch.cat((pos_masks, neg_masks), dim=0)
+                # labels = torch.cat((pos_labels, neg_labels), dim=0)                       
+                batch_data = tuple(i.to(device) for i in batch_data)
+                ids, masks, _, labels = batch_data
 
                 model.zero_grad()
                 loss, logits = model(ids, masks, labels)
@@ -99,10 +104,11 @@ def ner_train(args, tokenizer, array, device):
                             pgd.restore_grad()
                         loss_adv, at_logits = model(ids, masks, labels)
                         _, _, new_F1 = model.calculate_F1([at_logits], [labels])
-                        loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
                         if new_F1 < ori_F1:
                             pgd.restore_grad()
+                            loss_adv.backward()
                             break
+                        loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
 
                     pgd.restore() # restore embedding parameters
 
