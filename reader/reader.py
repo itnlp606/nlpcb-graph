@@ -15,7 +15,7 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
     all_tokenized_sents, all_labels = ner_preprocess(data, tokenizer)
     dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['attention_mask'],\
         all_tokenized_sents['offset_mapping'], all_labels)
-    if mode == 'seq':    
+    if mode == 'seq':
         sampler = SequentialSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
 
