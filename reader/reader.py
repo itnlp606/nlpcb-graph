@@ -42,8 +42,8 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
         neg_dataset = TensorDataset(torch.stack(neg_ids), torch.stack(neg_mask),\
             torch.stack(neg_map), torch.stack(neg_labels)) 
         pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
-        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=4)
-        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=12)
+        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=12)
+        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=4)
         return pos_loader, neg_loader
 
 # return tokenized_data, labels
