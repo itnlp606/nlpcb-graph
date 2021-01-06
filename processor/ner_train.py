@@ -63,7 +63,7 @@ def ner_train(args, tokenizer, array, device):
                 valid_iter = valid_loader
 
             # training process
-            for kdx, (pos_data, neg_data) in enumerate(train_iter):
+            # for kdx, (pos_data, neg_data) in enumerate(train_iter):
             for kdx, batch_data in enumerate(train_iter):
                 # pos_data = tuple(i.to(device) for i in pos_data)
                 # neg_data = tuple(i.to(device) for i in neg_data)
