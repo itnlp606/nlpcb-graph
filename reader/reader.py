@@ -61,10 +61,11 @@ def ner_preprocess(data, tokenizer):
             char_label[start] = NER_LABEL2ID['B']
             for i in range(start+1, end):
                 char_label[i] = NER_LABEL2ID['I']
-            labs.append((char_label, lab))
+        labs.append((char_label, lab))
 
     all_sents, all_labels = [], []
     for sent, (char_label, lab) in zip(sents, labs):
+        # print(sent, char_label, lab)
         tokenized_sent = tokenizer(sent, return_offsets_mapping=True)
         label = []
         for idx, mp in enumerate(tokenized_sent['offset_mapping']):
