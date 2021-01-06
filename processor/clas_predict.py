@@ -10,7 +10,7 @@ from utils.utils import divide_dataset
 @print_execute_time
 def clas_predict(args, tokenizer, array, device):
     # load model
-    model = torch.load('sent_clas_model/MOD1_5_34_6833', map_location=device)
+    model = torch.load('sent_clas_models/MOD1_5_34_6833', map_location=device)
     
     # load data
     train_data, valid_data = divide_dataset(array, args.num_fold, fold=1)
