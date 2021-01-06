@@ -31,7 +31,7 @@ def ner_train(args, tokenizer, array, device):
         if args.use_at == 'fgm': fgm = FGM(model)
         elif args.use_at == 'pgd': 
             pgd = PGD(model)
-            K = 1
+            K = 3
 
         # new tensorized data and maps
         train_data, valid_data = divide_dataset(array, args.num_fold, fold)
