@@ -13,7 +13,7 @@ def clas_predict(args, tokenizer, array, device):
     model = torch.load('sent_clas_models/MOD1_5_34_6833', map_location=device)
     
     # load data
-    train_data, valid_data = divide_dataset(array, args.num_fold, fold=1)
+    train_data, valid_data = divide_dataset(args.seed, array, args.num_fold, fold=1)
     valid_iter = clas_tensorize(train_data, tokenizer, args, mode='seq')
 
     with torch.no_grad():

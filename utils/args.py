@@ -65,7 +65,7 @@ def get_parser():
     parser.add_argument("--pgd_K", type=int, default=3)
     parser.add_argument("--select_methods", type=str, default='mean')
     parser.add_argument("--eval_num", type=int, default=500)
-    parser.add_argument("--random_seed", type=int, default=2020)
+    parser.add_argument("--seed", type=int, default=2233)
     parser.add_argument("--num_fold", type=int, default=10)
     parser.add_argument("--fold", type=int, nargs='+', action='store',
                         help="""specified as 'dev_id/num_folds', where dev_id and num_folds are both Int, like 0/10、 

@@ -48,8 +48,8 @@ def clear_dir(dir):
     for f in files:
         os.remove(f)
 
-def divide_dataset(array, num_fold, fold):
-    np.random.seed(2233)
+def divide_dataset(seed, array, num_fold, fold):
+    np.random.seed(seed)
     np.random.shuffle(array)
     block_len = int(array.shape[0]/10)
 

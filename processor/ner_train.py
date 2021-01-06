@@ -34,7 +34,7 @@ def ner_train(args, tokenizer, array, device):
             K = args.pgd_K
 
         # new tensorized data and maps
-        train_data, valid_data = divide_dataset(array, args.num_fold, fold)
+        train_data, valid_data = divide_dataset(args.seed, array, args.num_fold, fold)
         pos_loader, neg_loader = ner_tensorize(train_data, tokenizer, args, mode='random')
         valid_loader = ner_tensorize(valid_data, tokenizer, args, mode='seq')
         len_train = len(pos_loader)
