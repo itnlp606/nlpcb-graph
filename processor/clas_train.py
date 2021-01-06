@@ -124,7 +124,7 @@ def clas_train(args, tokenizer, array, device):
                         batch_data = tuple(i.to(device) for i in batch_data)
                         ids, masks, labels = batch_data
                         
-                        loss, logits = valid_model(ids, masks, labels).to_tuple()
+                        loss, logits = valid_model(ids, masks, labels)
 
                         pred_logits.append(logits)
                         pred_labels.append(labels)
