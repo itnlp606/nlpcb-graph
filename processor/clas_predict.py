@@ -14,7 +14,7 @@ def clas_predict(args, tokenizer, array, device):
     
     # load data
     train_data, valid_data = divide_dataset(array, args.num_fold, fold=1)
-    valid_iter = clas_tensorize(valid_data, tokenizer, args, mode='seq')
+    valid_iter = clas_tensorize(train_data, tokenizer, args, mode='seq')
 
     with torch.no_grad():
         model.eval()
