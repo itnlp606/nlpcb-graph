@@ -83,7 +83,7 @@ def clas_train(args, tokenizer, array, device):
                 # fgm adversial training
                 if args.use_at == 'fgm':
                     fgm.attack()
-                    loss_adv, _ = model(ids, masks, labels).to_tuple()
+                    loss_adv, _ = model(ids, masks, labels)
                     loss_adv.backward()
                     fgm.restore()
 
@@ -96,7 +96,7 @@ def clas_train(args, tokenizer, array, device):
                             model.zero_grad()
                         else:
                             pgd.restore_grad()
-                        loss_adv, at_logits = model(ids, masks, labels).to_tuple()
+                        loss_adv, at_logits = model(ids, masks, labels)
                         _, _, new_F1 = model.calculate_F1([at_logits], [labels])
                         loss_adv.backward() # 反向传播，并在正常的grad基础上，累加对抗训练的梯度
                         if new_F1 < ori_F1:
