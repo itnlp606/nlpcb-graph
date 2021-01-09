@@ -6,6 +6,7 @@ from processor.clas_predict import clas_predict
 from transformers import AutoTokenizer
 from processor.ner_train import ner_train
 from processor.clas_train import clas_train
+from processor.relation_train import relation_train
 from reader.reader import data2numpy, clas_tensorize, ner_tensorize
 
 if __name__ == '__main__':
@@ -34,9 +35,12 @@ if __name__ == '__main__':
         array = clas_array
         train = clas_train
         predict = clas_predict
-    else:
+    elif args.task == 'ner':
         array = ner_array
         train = ner_train
+    elif args.task == 'relation':
+        array = ner_array
+        train = relation_train
 
     if args.do_train:
         train(args, tokenizer, array, device)

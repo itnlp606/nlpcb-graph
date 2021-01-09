@@ -22,31 +22,6 @@ def ner_tensorize(data, tokenizer, args, mode='seq'):
     elif mode == 'random':
         sampler = RandomSampler(dataset)
         return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
-        # pos_ids, pos_map, pos_mask, pos_labels, neg_ids, neg_map, neg_mask, neg_labels = \
-        #     [], [], [], [], [], [], [], []
-        # for ids, mask, maps, label in zip(all_tokenized_sents['input_ids'], \
-        #     all_tokenized_sents['attention_mask'], all_tokenized_sents['offset_mapping'], all_labels):
-        #     sm = torch.sum(label)
-        #     if sm > 0:
-        #         pos_ids.append(ids)
-        #         pos_map.append(maps)
-        #         pos_mask.append(mask)
-        #         pos_labels.append(label)
-        #     else:
-        #         neg_ids.append(ids)
-        #         neg_map.append(maps)
-        #         neg_mask.append(mask)
-        #         neg_labels.append(label)
-        
-        # # construct data loader
-        # pos_dataset = TensorDataset(torch.stack(pos_ids), torch.stack(pos_mask),\
-        #     torch.stack(pos_map), torch.stack(pos_labels))     
-        # neg_dataset = TensorDataset(torch.stack(neg_ids), torch.stack(neg_mask),\
-        #     torch.stack(neg_map), torch.stack(neg_labels)) 
-        # pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
-        # pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=12)
-        # neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=4)
-        # return pos_loader, neg_loader
 
 # return tokenized_data, labels
 def ner_preprocess(data, tokenizer):

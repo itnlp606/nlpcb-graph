@@ -2,8 +2,21 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 from utils.constants import *
-from allennlp.modules import ConditionalRandomField
-from transformers import AutoModelForSequenceClassification, AutoModelForTokenClassification
+from transformers import AutoModelForSequenceClassification, AutoModelForTokenClassification, \
+    AutoModel
+
+class BERTRE(nn.Module):
+    def __init__(self, args):
+        super(BERTRE, self).__init__()
+        self.args = args
+        self.encoder = AutoModel.from_pretrained(args.model_name_or_path, cache_dir=args.pretrained_cache_dir)
+        self.hidden_size = self.encoder.config.hidden_size
+
+    def forward(self, x):
+        o = self.encoder(x)
+        print(o.shape)
+
+        raise Exception
 
 class BERTNER(nn.Module):
     def __init__(self, args):
@@ -12,6 +25,7 @@ class BERTNER(nn.Module):
         self.emission = AutoModelForTokenClassification.from_pretrained(args.model_name_or_path, \
             cache_dir=args.pretrained_cache_dir, num_labels=len(NER_ID2LABEL))
         if self.args.use_crf:
+            from allennlp.modules import ConditionalRandomField
             self.crf = ConditionalRandomField(len(NER_ID2LABEL), include_start_end_transitions=False)
         
     def forward(self, ids, masks, labels):
