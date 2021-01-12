@@ -2,6 +2,7 @@ import os
 import torch
 import pandas as pd
 import transformers
+from time import time
 from tqdm import tqdm
 from model.bert import BERTCLAS, BERT
 from utils.utils import print_execute_time
@@ -11,7 +12,7 @@ from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 @print_execute_time
 def clas_predict(args, tokenizer, device, data_folder):
-    vote_knife = 4
+    vote_knife = 6
 
     base_dir = 'sent_clas_models'
     mods = os.listdir(base_dir)
@@ -30,8 +31,6 @@ def clas_predict(args, tokenizer, device, data_folder):
         task_path = 'results/'+task
         if not os.path.exists(task_path):
             os.mkdir(task_path)
-        else:
-            continue
 
         # process
         articles = os.listdir(data_folder+'/'+task)
@@ -64,6 +63,7 @@ def clas_predict(args, tokenizer, device, data_folder):
             dataset = TensorDataset(tokenized_sents['input_ids'], tokenized_sents['attention_mask'], labels)
             loader = DataLoader(dataset, args.batch_size)
 
+            start_time = time()
             for q, data in enumerate(loader):
                 data = tuple(i.to(device) for i in data)
                 ids, masks, labels = data
@@ -82,6 +82,9 @@ def clas_predict(args, tokenizer, device, data_folder):
                 for idx, vote in enumerate(vote_box):
                     if vote >= vote_knife:
                         result.append(q*args.batch_size + idx + 1)
+
+            print(result)
+            raise Exception
 
             # 写进文件
             with open(path+'/sentences.txt', 'w') as f:
