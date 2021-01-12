@@ -11,7 +11,7 @@ class BERTRE(nn.Module):
     def __init__(self, args):
         super(BERTRE, self).__init__()
         self.emission = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_path, \
-            cache_dir=args.pretrained_cache_dir, num_labels=2)
+            cache_dir=args.pretrained_cache_dir, num_labels=len(ID2BLOCK)+1)
         
     def forward(self, ids, masks, labels):
         return self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
