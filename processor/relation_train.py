@@ -7,7 +7,7 @@ from model.fgm import FGM
 from model.pgd import PGD
 from torch.optim import swa_utils
 from utils.optim import get_optimizer_scheduler
-from reader.reader import ner_tensorize
+from processor.preprocessor import relation_tensorize
 from utils.utils import divide_dataset
 
 def relation_train(args, tokenizer, array, device):
@@ -35,8 +35,8 @@ def relation_train(args, tokenizer, array, device):
 
         # new tensorized data and maps
         train_data, valid_data = divide_dataset(args.seed, array, args.num_fold, fold)
-        train_loader = ner_tensorize(train_data, tokenizer, args, mode='random')
-        valid_loader = ner_tensorize(valid_data, tokenizer, args, mode='seq')
+        train_loader = relation_tensorize(train_data, tokenizer, args, mode='random')
+        valid_loader = relation_tensorize(valid_data, tokenizer, args, mode='seq')
         len_train = len(train_loader)
 
         # optim
@@ -63,7 +63,7 @@ def relation_train(args, tokenizer, array, device):
             # training process
             for kdx, batch_data in enumerate(train_iter):          
                 batch_data = tuple(i.to(device) for i in batch_data)
-                ids, masks, _, labels = batch_data
+                ids, masks, labels = batch_data
 
                 model.zero_grad()
                 loss, logits = model(ids, masks, labels)
@@ -118,7 +118,7 @@ def relation_train(args, tokenizer, array, device):
                     pred_logits, pred_labels = [], []
                     for idx, batch_data in enumerate(valid_iter):
                         batch_data = tuple(i.to(device) for i in batch_data)
-                        ids, masks, maps, labels = batch_data
+                        ids, masks, labels = batch_data
                         
                         loss, logits = valid_model(ids, masks, labels)
 

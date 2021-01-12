@@ -4,7 +4,7 @@ import transformers
 from tqdm import tqdm
 from model.bert import BERTCLAS, BERT
 from utils.utils import print_execute_time
-from reader.reader import clas_tensorize
+from processor.preprocessor import clas_tensorize
 from utils.utils import divide_dataset
 
 @print_execute_time

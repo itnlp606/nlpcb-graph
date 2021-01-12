@@ -1,134 +1,30 @@
 import os
 import json
-import torch
 import pickle
 import numpy as np
-from tqdm import tqdm
+from copy import deepcopy
 from utils.constants import *
 from transformers import AutoTokenizer
 from collections import defaultdict
-from utils.utils import print_execute_time, print_empty_line
-from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
-
-def ner_tensorize(data, tokenizer, args, mode='seq'):
-    # divide into tags and texts
-    all_tokenized_sents, all_labels = ner_preprocess(data, tokenizer)
-    dataset = TensorDataset(all_tokenized_sents['input_ids'], all_tokenized_sents['attention_mask'],\
-        all_tokenized_sents['offset_mapping'], all_labels)
-    if mode == 'seq':
-        sampler = SequentialSampler(dataset)
-        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
-
-    elif mode == 'random':
-        sampler = RandomSampler(dataset)
-        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
-
-# return tokenized_data, labels
-def ner_preprocess(data, tokenizer):
-    sents, labs = [], []
-    for sent, lab in data:
-        sents.append(sent)
-        char_label = [NER_LABEL2ID['O'] for _ in range(len(sent))]
-        for tup in lab:
-            start, end, word = tup
-            # if sent[start:end] != word:
-            #     raise Exception('wrong match')
-            char_label[start] = NER_LABEL2ID['B']
-            for i in range(start+1, end):
-                char_label[i] = NER_LABEL2ID['I']
-        labs.append((char_label, lab))
-
-    all_sents, all_labels = [], []
-    for sent, (char_label, lab) in zip(sents, labs):
-        # print(sent, char_label, lab)
-        tokenized_sent = tokenizer(sent, return_offsets_mapping=True)
-        label = []
-        for idx, mp in enumerate(tokenized_sent['offset_mapping']):
-            if idx > 0 and mp[0] == 0 and mp[1] == 0:
-                break
-            elif idx == 0: 
-                label.append(0)
-            else:
-                ret = char_label[mp[0]]
-                if ret == 1:
-                    if mp[0] == 0: label.append(ret)
-                    elif mp[0] > 0:
-                        if char_label[mp[0]-1] == 1:
-                            label.append(NER_LABEL2ID['I'])
-                        else:
-                            label.append(ret)
-                else: label.append(ret)
-
-        all_sents.append(sent)
-        all_labels.append(label)
-
-    all_tokenized_sents = tokenizer(all_sents, padding=True, truncation=True,\
-        return_offsets_mapping=True, return_tensors='pt')
-    all_seq_len = all_tokenized_sents['input_ids'].shape[1]
-
-    for label in all_labels:
-        label.extend([0]*(all_seq_len - len(label)))
-
-    return all_tokenized_sents, torch.tensor(all_labels)
-
-def clas_tensorize(data, tokenizer, args, mode='seq'):
-    # divide into tags and texts
-    tokenized_data, labels = clas_preprocess(data, tokenizer)
-    if mode == 'seq':
-        ids, masks = tokenized_data['input_ids'], tokenized_data['attention_mask']
-        dataset = TensorDataset(ids, masks, labels)
-        sampler = SequentialSampler(dataset)
-        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
-    elif mode == 'random':
-        pos_ids, pos_masks, neg_ids, neg_masks = [], [], [], []
-        for i, (ids, mask, label) in enumerate(zip(tokenized_data['input_ids'], \
-            tokenized_data['attention_mask'], labels)):
-            ids = ids
-            mask = mask
-            if label >= 1:
-                pos_ids.append(ids)
-                pos_masks.append(mask)
-            else:
-                neg_ids.append(ids)
-                neg_masks.append(mask)
-        
-        pos_ids, pos_masks, neg_ids, neg_masks = torch.stack(pos_ids), \
-            torch.stack(pos_masks), torch.stack(neg_ids), torch.stack(neg_masks)
-        
-        # construct data loader
-        pos_dataset = TensorDataset(pos_ids, pos_masks, torch.ones(pos_ids.shape[0], dtype=torch.int64))
-        neg_dataset = TensorDataset(neg_ids, neg_masks, torch.zeros(neg_ids.shape[0], dtype=torch.int64))
-        pos_sampler, neg_sampler = RandomSampler(pos_dataset), RandomSampler(neg_dataset)
-        pos_loader = DataLoader(pos_dataset, sampler=pos_sampler, batch_size=3)
-        neg_loader = DataLoader(neg_dataset, sampler=neg_sampler, batch_size=5)
-        return pos_loader, neg_loader
-
-# return tokenizer, labels
-def clas_preprocess(data, tokenizer):
-    labels, texts = [], []
-    for tup in data:
-        text, label = tup
-        labels.append(int(label))
-        texts.append(text)
-    tokenized_text = tokenizer(texts, padding=True, truncation=True, return_tensors='pt')
-    labels = torch.tensor(labels)
-    
-    return tokenized_text, labels
+from utils.utils import print_execute_time
 
 @print_execute_time
-def data2numpy():
+def data2numpy(seed):
+    # np.random.seed(seed)
     tasks = os.listdir('data')
     clas_array = []
     ner_array = []
-    mx_len = 0
+    relation_array = []
 
     dd = {0:0, 1:0, 2:0}
+    ct_relations = 0
+    ct_code, ct_res = 0, 0
     # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
     #     cache_dir='pretrained_models', use_fast=True)
 
     for task in tasks:
         # ignore readme
-        if task[-3:] == '.md':
+        if task[-3:] == '.md' or task[-4:] == '.git':
             continue
 
         # process
@@ -148,10 +44,12 @@ def data2numpy():
                     para_name = f
             
             # get dir, data
+            base_article_dir = 'data/'+task+'/'+article+'/'
             para_dir = 'data/'+task+'/'+article+'/'+para_name
             sent_dir = 'data/'+task+'/'+article+'/'+name
             label_dir = 'data/'+task+'/'+article+'/'+sent_pat
             entity_dir = 'data/'+task+'/'+article+'/'+entity_pat
+
             with open(para_dir, 'r') as f:
                 paras = f.readlines()
             with open(sent_dir, 'r') as f:
@@ -172,8 +70,121 @@ def data2numpy():
             for entity in entities:
                 if entity[-1] == '\n': entity = entity[:-1]
                 items = entity.split('\t')
+                
+                items[0], items[1], items[2] = \
+                    int(items[0]), int(items[1]), int(items[2])
+                
+                # 实体标注还是很准的，就两个多空格
+                if items[3] != sents[items[0]-1][items[1]:items[2]]:
+                    items[3] = items[3].strip()
+
                 sentID2entites[int(items[0])].append((\
-                    int(items[1]), int(items[2]), items[3]))
+                    items[1], items[2], items[3]))
+
+            # 提取三元组，要和句子结合，提取每个句子的三元组。
+            triple_files = os.listdir(base_article_dir + 'triples')
+            for name in triple_files:
+                with open(base_article_dir+'triples/'+name, 'r') as f:
+                    content = f.readlines()
+                    triples = set()
+                    for line in content:
+                        if line[-1] == '\n': line = line[:-1]
+                        # 替换setup
+                        if 'Experimental Setup' in line:
+                            line = line.replace('Experimental Setup', 'Experimental setup')
+                        
+                        # 去括号
+                        ents = line[1:-1].split('||')
+                        triples.add(tuple(ents))
+
+                    # 对句子中的实体排序（插入排序）
+                    for sent in sentID2entites:
+                        entity_list = sentID2entites[sent]
+
+                        sorted_entities = [entity_list[0]]
+                        for i in range(1, len(entity_list)):
+                            entity = entity_list[i]
+                            for j, ele in enumerate(sorted_entities):
+                                if ele[0] > entity[0]:
+                                    sorted_entities.insert(j, entity)
+                                    break
+                            else:
+                                sorted_entities.append(entity)
+
+                        sorted_entities = [i[2] for i in sorted_entities]
+
+                        # 对每个三元组，如果在，看位置
+                        pos_pos = []
+                        for triple in triples:
+                            if FILENAME2BLOCK[name] in BLOCK_MID_NAMES \
+                                and triple[-1] in sorted_entities:
+                                pos_sample = deepcopy(sents[sent-1])
+                                for word in triple:
+                                    pos_sample += '#' + word
+                                relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                pos_pos.append([sorted_entities.index(triple[-1])])
+                                continue
+
+                            for word in triple:
+                                if word not in sorted_entities:
+                                    break
+                            else:
+                                # 存在三元组，生成正样本(三元组加到后面)
+                                pos_sample = deepcopy(sents[sent-1])
+                                for word in triple:
+                                    pos_sample += '#' + word
+
+                                relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                pos = [sorted_entities.index(word) for word in triple]
+                                pos_pos.append(pos)
+
+                        # 生成负样本
+                        lp = len(pos_pos)
+                        ls = len(sorted_entities)
+                        if pos_pos:
+                            neg_pos = []
+                            array = list(range(ls))
+                            if FILENAME2BLOCK[name] in BLOCK_MID_NAMES:
+                                # print(FILENAME2BLOCK[name], 3*lp, ls-lp)
+                                while len(neg_pos) < min(3*lp, ls-lp):
+                                    pos = np.random.choice(array, 1).tolist()
+                                    if pos in pos_pos or pos in neg_pos:
+                                        continue
+                                    neg_pos.append(pos)
+                                for pos in neg_pos:
+                                    ents = [sorted_entities[p] for p in pos]
+                                    neg_sample = deepcopy(sents[sent-1])
+                                    for word in ents:
+                                        neg_sample += '#' + word
+                                    relation_array.append((neg_sample, 0))
+                                continue
+
+                            while len(neg_pos) < min(3*lp, ls*(ls-1)*(ls-2)-lp):
+                                # print(len(neg_pos), min(3*lp, lp*(lp-1)*(lp-2)-lp), neg_pos)
+                                pos = np.random.choice(array, 3, replace=False).tolist()
+                                if pos in pos_pos or pos in neg_pos:
+                                    continue
+                                neg_pos.append(pos)
+                            
+                            for pos in neg_pos:
+                                ents = [sorted_entities[p] for p in pos]
+                                neg_sample = deepcopy(sents[sent-1])
+                                for word in ents:
+                                    neg_sample += '#' + word
+                                relation_array.append((neg_sample, 0))
+                                ct_relations += 1
+                                if ct_relations % 714 == 0:
+                                    ct_code += 3
+                                    for word in ents:
+                                        code_neg = deepcopy(sents[sent-1])
+                                        code_neg += '#Contribution#Code#' + word
+                                        relation_array.append((code_neg, 0))
+                                if ct_relations % 43 == 0:
+                                    ct_res += 3
+                                    for word in ents:
+                                        res_neg = deepcopy(sents[sent-1])
+                                        res_neg += '#Contribution#has research problem#' + word
+                                        relation_array.append((res_neg, 0))
 
             # append data
             for i, sent in enumerate(sents):
@@ -220,7 +231,4 @@ def data2numpy():
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
 
-    # print(dd)
-    # raise Exception
-
-    return np.array(clas_array), np.array(ner_array, dtype=object)
+    return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array)

@@ -7,7 +7,7 @@ from model.fgm import FGM
 from model.pgd import PGD
 from torch.optim import swa_utils
 from utils.optim import get_optimizer_scheduler
-from reader.reader import clas_tensorize
+from processor.preprocessor import clas_tensorize
 from utils.utils import divide_dataset
 
 def clas_train(args, tokenizer, array, device):

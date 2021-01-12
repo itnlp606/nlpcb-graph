@@ -7,7 +7,8 @@ from transformers import AutoTokenizer
 from processor.ner_train import ner_train
 from processor.clas_train import clas_train
 from processor.relation_train import relation_train
-from reader.reader import data2numpy, clas_tensorize, ner_tensorize
+from processor.preprocessor import clas_tensorize, ner_tensorize
+from reader.reader import data2numpy
 
 if __name__ == '__main__':
     args = get_parser()
@@ -19,7 +20,7 @@ if __name__ == '__main__':
     # read data
     # with open('array.pkl', 'rb') as f:
     #     array = pickle.load(f)
-    clas_array, ner_array = data2numpy()
+    clas_array, ner_array, relation_array = data2numpy(args.seed)
 
     # GPU device
     if torch.cuda.is_available() and args.use_cuda:
@@ -39,7 +40,7 @@ if __name__ == '__main__':
         array = ner_array
         train = ner_train
     elif args.task == 'relation':
-        array = ner_array
+        array = relation_array
         train = relation_train
 
     if args.do_train:

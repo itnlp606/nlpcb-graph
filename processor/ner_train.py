@@ -7,7 +7,7 @@ from model.fgm import FGM
 from model.pgd import PGD
 from torch.optim import swa_utils
 from utils.optim import get_optimizer_scheduler
-from reader.reader import ner_tensorize
+from processor.preprocessor import ner_tensorize
 from utils.utils import divide_dataset
 
 def ner_train(args, tokenizer, array, device):

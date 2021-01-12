@@ -1,6 +1,8 @@
 import torch
+import numpy as np
 import torch.nn as nn
 from tqdm import tqdm
+from copy import deepcopy
 from utils.constants import *
 from transformers import AutoModelForSequenceClassification, AutoModelForTokenClassification, \
     AutoModel
@@ -8,15 +10,38 @@ from transformers import AutoModelForSequenceClassification, AutoModelForTokenCl
 class BERTRE(nn.Module):
     def __init__(self, args):
         super(BERTRE, self).__init__()
-        self.args = args
-        self.encoder = AutoModel.from_pretrained(args.model_name_or_path, cache_dir=args.pretrained_cache_dir)
-        self.hidden_size = self.encoder.config.hidden_size
+        self.emission = AutoModelForSequenceClassification.from_pretrained(args.model_name_or_path, \
+            cache_dir=args.pretrained_cache_dir, num_labels=2)
+        
+    def forward(self, ids, masks, labels):
+        return self.emission(input_ids=ids, attention_mask=masks, labels=labels).to_tuple()
 
-    def forward(self, x):
-        o = self.encoder(x)
-        print(o.shape)
+    def calculate_F1(self, pred_logits, pred_labels):
+        zeros = [0 for _ in range(len(ID2BLOCK))]
+        total_true, total_pred, pred_true = \
+            deepcopy(zeros), deepcopy(zeros), deepcopy(zeros)
+        # for each element in list
+        for logits, labels in zip(pred_logits, pred_labels):
+            logits = torch.argmax(logits, 1)
+            for pred, true in zip(logits, labels):
+                pred, true = pred.item(), true.item()
+                if pred >= 1 and true == labels:
+                    pred_true[pred-1] += 1
+                if pred >= 1:
+                    total_pred[pred-1] += 1
+                if true >= 1:
+                    total_true[true-1] += 1
 
-        raise Exception
+        F1s, pres, recalls = deepcopy(zeros), deepcopy(zeros), deepcopy(zeros)
+        for i in range(len(F1s)):
+            try:
+                pres[i] = pred_true[i] / total_pred[i]
+                recalls[i] = pred_true[i] / total_true[i]
+                F1[i] = 2*pres[i]*recalls[i] / (precision[i] + recalls[i])
+            except:
+                pres[i], recalls[i], F1s[i] = 0, 0, 0
+
+        return np.mean(pres), np.mean(recalls), np.mean(F1s)
 
 class BERTNER(nn.Module):
     def __init__(self, args):
