@@ -1,5 +1,6 @@
 import torch
 from tqdm import tqdm
+from constants import *
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
 def relation_tensorize(data, tokenizer, args, mode='seq'):
