@@ -2,8 +2,9 @@ import torch
 import pickle
 import pandas as pd
 from utils.args import get_parser
-from processor.clas_predict import clas_predict
 from transformers import AutoTokenizer
+from processor.clas_predict import clas_predict
+from processor.ner_predict import ner_predict
 from processor.ner_train import ner_train
 from processor.clas_train import clas_train
 from processor.relation_train import relation_train
@@ -39,6 +40,7 @@ if __name__ == '__main__':
     elif args.task == 'ner':
         array = ner_array
         train = ner_train
+        predict = ner_predict
     elif args.task == 'relation':
         array = relation_array
         train = relation_train

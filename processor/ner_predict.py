@@ -10,10 +10,10 @@ from processor.preprocessor import clas_tensorize
 from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
-def clas_predict(args, tokenizer, device, data_folder):
+def ner_predict(args, tokenizer, device, data_folder):
     vote_knife = 6
 
-    base_dir = 'sent_clas_models'
+    base_dir = 'ner_models'
     mods = os.listdir(base_dir)
 
     tasks = os.listdir(data_folder)
@@ -29,7 +29,6 @@ def clas_predict(args, tokenizer, device, data_folder):
         # process
         articles = os.listdir(data_folder+'/'+task)
         pattern = 'Stanza-out.txt'
-        paragraph_pat = 'Grobid-out.txt'
 
         for article in tqdm(articles):
             # mkdir
@@ -44,48 +43,11 @@ def clas_predict(args, tokenizer, device, data_folder):
             for f in files:
                 if pattern in f:
                     name = f
-                if paragraph_pat in f:
-                    para_name = f
             
             # get dir, data
             sent_dir = data_folder+'/'+task+'/'+article+'/'+name
-            para_dir = 'data/'+task+'/'+article+'/'+para_name
             with open(sent_dir, 'r') as f:
-                sents = f.readlines()            
-            with open(para_dir, 'r') as f:
-                paras = f.readlines()
-
-            def get_context(i):
-                if i < 0 or i >= len(sents):
-                    return ""
-                return '#' + sents[i]
-
-            for i, sent in enumerate(sents):
-                # 去掉回车
-                if sent[-1] == '\n':
-                    sent = sent[:-1]
-
-                # extract title
-                for j, para in enumerate(paras):
-                    if sent in para:
-                        idx = j
-
-                while idx >= 0 and paras[idx] != '\n': idx -= 1
-                if idx == 0: title = paras[0]
-                else: title = paras[idx+1]
-
-                if title[-1] == '\n':
-                    title = title[:-1]
-                
-                sent += '#' + title
-                
-                K = 1
-                for cxt in range(K):
-                    sent += get_context(i-cxt) + get_context(i+cxt)
-
-                print(sents[0])
-
-                raise Exception
+                sents = f.readlines()
 
             labels = torch.tensor([0]*len(sents))
             tokenized_sents = tokenizer(sents, padding=True, truncation=True, return_tensors='pt')
@@ -110,7 +72,7 @@ def clas_predict(args, tokenizer, device, data_folder):
                         result.append(q*args.batch_size + idx + 1)
 
             # 写进文件
-            with open(path+'/sentences.txt', 'w') as f:
+            with open(path+'/entities.txt', 'w') as f:
                 for idx, sent in enumerate(result):
                     if idx == 0:
                         f.write(str(sent))
