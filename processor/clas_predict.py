@@ -49,7 +49,8 @@ def clas_predict(args, tokenizer, device, data_folder):
             
             # get dir, data
             sent_dir = data_folder+'/'+task+'/'+article+'/'+name
-            para_dir = 'data/'+task+'/'+article+'/'+para_name
+            para_dir = data_folder+'/'+task+'/'+article+'/'+para_name
+            print(para_dir)
             with open(sent_dir, 'r') as f:
                 sents = f.readlines()            
             with open(para_dir, 'r') as f:
