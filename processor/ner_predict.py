@@ -12,7 +12,7 @@ from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 def ner_predict(args, tokenizer, device, data_folder):
-    vote_knife = 6
+    vote_knife = 5
     tt_nums = 0
     tt_ents = 0
 
@@ -25,7 +25,7 @@ def ner_predict(args, tokenizer, device, data_folder):
         if task[-3:] == '.md' or task[-4:] == '.git' or task[-4:] == '.zip':
             continue
 
-        if task == 'natural_language_inference': continue
+        if task != 'natural_language_inference': continue
 
         task_path = data_folder+'/'+task
 
