@@ -214,9 +214,7 @@ def data2numpy(seed):
                 
                 sent += '#' + title
 
-                K = 1
-                for cxt in range(K):
-                    sent += get_context(i-cxt) + get_context(i+cxt)
+                sent += get_context(i-1) + get_context(i+1)
 
                 # s = tokenizer(sent)
                 # if len(s['input_ids']) < 510:

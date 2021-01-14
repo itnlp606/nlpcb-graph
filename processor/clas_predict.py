@@ -65,6 +65,7 @@ def clas_predict(args, tokenizer, device, data_folder):
                     return ""
                 return '#' + sents[i]
 
+            processed_sents = []
             for i, sent in enumerate(sents):
                 # 去掉回车
                 if sent[-1] == '\n':
@@ -83,13 +84,11 @@ def clas_predict(args, tokenizer, device, data_folder):
                     title = title[:-1]
                 sent += '#' + title
                 
-                K = 1
-                for cxt in range(K):
-                    sent += get_context(i-cxt) + get_context(i+cxt)
-                sents[0] = sent
+                sent += get_context(i-1) + get_context(i+1)
+                processed_sents.append(sent)
 
             labels = torch.tensor([0]*len(sents))
-            tokenized_sents = tokenizer(sents, padding=True, truncation=True, return_tensors='pt')
+            tokenized_sents = tokenizer(processed_sents, padding=True, truncation=True, return_tensors='pt')
             dataset = TensorDataset(tokenized_sents['input_ids'], tokenized_sents['attention_mask'], labels)
             loader = DataLoader(dataset, args.batch_size)
 
