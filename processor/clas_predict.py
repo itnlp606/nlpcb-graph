@@ -17,10 +17,12 @@ def clas_predict(args, tokenizer, device, data_folder):
     mods = os.listdir(base_dir)
 
     tasks = os.listdir(data_folder)
-    for task in tasks:
+    for task in tasks:        
         # ignore readme
-        if task[-3:] == '.md' or task[-4:] == '.git':
+        if task[-3:] == '.md' or task[-4:] == '.git' or task[-4:] == '.zip':
             continue
+
+        if task == 'natural_language_inference': continue
 
         task_path = 'results/'+task
         if not os.path.exists(task_path):
