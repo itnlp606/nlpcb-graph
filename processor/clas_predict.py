@@ -11,7 +11,7 @@ from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 def clas_predict(args, tokenizer, device, data_folder):
-    vote_knife = 6
+    vote_knife = 5
 
     base_dir = 'sent_clas_models'
     mods = os.listdir(base_dir)
@@ -25,6 +25,7 @@ def clas_predict(args, tokenizer, device, data_folder):
         task_path = 'results/'+task
         if not os.path.exists(task_path):
             os.mkdir(task_path)
+        else: continue
 
         # process
         articles = os.listdir(data_folder+'/'+task)
@@ -97,7 +98,8 @@ def clas_predict(args, tokenizer, device, data_folder):
                 
                 vote_box = [0 for _ in range(args.batch_size)]
                 for mod in mods:
-                    model = torch.load(base_dir+'/'+mod, map_location=device)
+                    model = torch.load(base_dir+'/'+mod, map_location=torch.device('cpu'))
+                    model = model.to(device)
                     _, logits = model(ids, masks, labels)
                     logits = torch.argmax(logits, 1)
                     for i in range(len(logits)):
