@@ -25,7 +25,7 @@ class BERTRE(nn.Module):
             logits = torch.argmax(logits, 1)
             for pred, true in zip(logits, labels):
                 pred, true = pred.item(), true.item()
-                if pred >= 1 and true == labels:
+                if pred >= 1 and true == pred:
                     pred_true[pred-1] += 1
                 if pred >= 1:
                     total_pred[pred-1] += 1
@@ -37,7 +37,7 @@ class BERTRE(nn.Module):
             try:
                 pres[i] = pred_true[i] / total_pred[i]
                 recalls[i] = pred_true[i] / total_true[i]
-                F1[i] = 2*pres[i]*recalls[i] / (precision[i] + recalls[i])
+                F1s[i] = 2*pres[i]*recalls[i] / (pres[i] + recalls[i])
             except:
                 pres[i], recalls[i], F1s[i] = 0, 0, 0
 

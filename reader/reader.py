@@ -22,8 +22,8 @@ def data2numpy(seed):
     #     cache_dir='pretrained_models', use_fast=True)
 
     for task in tasks:
-        if task != 'natural_language_inference':
-            continue
+        # if task != 'natural_language_inference':
+        #     continue
 
         # ignore readme
         if task[-3:] == '.md' or task[-4:] == '.git':

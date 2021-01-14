@@ -43,6 +43,21 @@ FILENAME2BLOCK = {
     'results.txt': 'Result'
 }
 
+BLOCK2FILENAME = {
+    'Hyperparameters': 'hyperparameters.txt',
+    'Approach': 'approach.txt', 
+    'Dataset': 'dataset.txt', 
+    'Baselines': 'baselines.txt', 
+    'has research problem': 'research-problem.txt', 
+    'Experiments': 'experiments.txt', 
+    'Experimental setup': 'experimental-setup.txt', 
+    'Ablation analysis': 'ablation-analysis.txt', 
+    'Tasks': 'tasks.txt', 
+    'Code': 'code.txt', 
+    'Model': 'model.txt', 
+    'Result': 'results.txt' 
+}
+
 BLOCK_BACK_NAMES = set([
     'Model',
     'Baselines',
