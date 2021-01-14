@@ -97,7 +97,7 @@ def clas_predict(args, tokenizer, device, data_folder):
                 
                 vote_box = [0 for _ in range(args.batch_size)]
                 for mod in mods:
-                    model = torch.load(base_dir+'/'+mod).to(device)
+                    model = torch.load(base_dir+'/'+mod, map_location=device)
                     _, logits = model(ids, masks, labels)
                     logits = torch.argmax(logits, 1)
                     for i in range(len(logits)):

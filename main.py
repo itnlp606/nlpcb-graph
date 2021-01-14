@@ -49,4 +49,4 @@ if __name__ == '__main__':
         train(args, tokenizer, array, device)
     
     else:
-        predict(args, tokenizer, device, 'practice-data')
+        predict(args, tokenizer, device, 'evaluation-phase1')
