@@ -92,22 +92,24 @@ def clas_predict(args, tokenizer, device, data_folder):
             loader = DataLoader(dataset, args.batch_size)
 
             start_time = time()
-            for q, data in enumerate(loader):
-                data = tuple(i.to(device) for i in data)
-                ids, masks, labels = data
-                
-                vote_box = [0 for _ in range(args.batch_size)]
-                for mod in mods:
-                    model = torch.load(base_dir+'/'+mod, map_location=torch.device('cpu'))
-                    model = model.to(device)
-                    _, logits = model(ids, masks, labels)
-                    logits = torch.argmax(logits, 1)
-                    for i in range(len(logits)):
-                        vote_box[i] += logits[i].item()
+            with torch.no_grad():
+                for q, data in enumerate(loader):
+                    data = tuple(i.to(device) for i in data)
+                    ids, masks, labels = data
+                    
+                    vote_box = [0 for _ in range(args.batch_size)]
+                    for mod in mods:
+                        model = torch.load(base_dir+'/'+mod, map_location=torch.device('cpu'))
+                        model = model.to(device)
+                        model.eval()
+                        _, logits = model(ids, masks, labels)
+                        logits = torch.argmax(logits, 1)
+                        for i in range(len(logits)):
+                            vote_box[i] += logits[i].item()
 
-                for idx, vote in enumerate(vote_box):
-                    if vote >= vote_knife:
-                        result.append(q*args.batch_size + idx + 1)
+                    for idx, vote in enumerate(vote_box):
+                        if vote >= vote_knife:
+                            result.append(q*args.batch_size + idx + 1)
 
             # 写进文件
             with open(path+'/sentences.txt', 'w') as f:
