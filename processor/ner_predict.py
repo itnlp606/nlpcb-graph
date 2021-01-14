@@ -49,6 +49,16 @@ def ner_predict(args, tokenizer, device, data_folder):
             with open(sent_dir, 'r') as f:
                 sents = f.readlines()
 
+            # 提取处理好的句子
+            with open('results/'+task+'/'+article+'/sentences.txt', 'r') as f:
+                content = f.readlines()
+            
+            sent_ids = []
+            for i in content:
+                if i[-1] == '\n': i = int(i[:-1])
+                else: i = int(i)
+                sent_ids.append(i)
+
             labels = torch.tensor([0]*len(sents))
             tokenized_sents = tokenizer(sents, padding=True, truncation=True, return_tensors='pt')
             dataset = TensorDataset(tokenized_sents['input_ids'], tokenized_sents['attention_mask'], labels)

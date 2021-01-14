@@ -50,10 +50,11 @@ def clas_predict(args, tokenizer, device, data_folder):
             # get dir, data
             sent_dir = data_folder+'/'+task+'/'+article+'/'+name
             para_dir = data_folder+'/'+task+'/'+article+'/'+para_name
-            print(para_dir)
+            
             with open(sent_dir, 'r') as f:
-                sents = f.readlines()            
-            with open(para_dir, 'r') as f:
+                sents = f.readlines()
+
+            with open(para_dir, 'r', encoding='ISO-8859-1') as f:
                 paras = f.readlines()
 
             def get_context(i):
@@ -77,16 +78,12 @@ def clas_predict(args, tokenizer, device, data_folder):
 
                 if title[-1] == '\n':
                     title = title[:-1]
-                
                 sent += '#' + title
                 
                 K = 1
                 for cxt in range(K):
                     sent += get_context(i-cxt) + get_context(i+cxt)
-
-                print(sents[0])
-
-                raise Exception
+                sents[0] = sent
 
             labels = torch.tensor([0]*len(sents))
             tokenized_sents = tokenizer(sents, padding=True, truncation=True, return_tensors='pt')
