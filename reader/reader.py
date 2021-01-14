@@ -15,7 +15,6 @@ def data2numpy(seed):
     clas_array = []
     ner_array = []
     relation_array = []
-
     dd = {0:0, 1:0, 2:0}
     ct_relations = 0
     ct_code, ct_res = 0, 0
@@ -228,7 +227,7 @@ def data2numpy(seed):
                     clas_array.append((sent, 1))#label_id))
                 else:
                     clas_array.append((sent, 0))
-    
+
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
 
