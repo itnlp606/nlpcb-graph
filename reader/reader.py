@@ -3,6 +3,7 @@ import json
 import pickle
 import numpy as np
 from copy import deepcopy
+from itertools import permutations
 from utils.constants import *
 from transformers import AutoTokenizer
 from collections import defaultdict
@@ -118,6 +119,7 @@ def data2numpy(seed):
                         # 对每个三元组，如果在，看位置
                         pos_pos = []
                         for triple in triples:
+                            # code, research情况
                             if FILENAME2BLOCK[name] in BLOCK_MID_NAMES \
                                 and triple[-1] in sorted_entities:
                                 pos_sample = deepcopy(sents[sent-1])
@@ -126,6 +128,11 @@ def data2numpy(seed):
                                 relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 pos_pos.append([sorted_entities.index(triple[-1])])
                                 continue
+
+                            # 头结点的has和其他谓词情况
+                            if triple[0] in BLOCK_BACK_NAMES:
+                                # 基本都是不存在的谓词，先忽略此情况
+                                pass
 
                             for word in triple:
                                 if word not in sorted_entities:
@@ -143,12 +150,12 @@ def data2numpy(seed):
                         # 生成负样本
                         lp = len(pos_pos)
                         ls = len(sorted_entities)
+                        neg_beishu = 5
                         if pos_pos:
                             neg_pos = []
                             array = list(range(ls))
                             if FILENAME2BLOCK[name] in BLOCK_MID_NAMES:
-                                # print(FILENAME2BLOCK[name], 3*lp, ls-lp)
-                                while len(neg_pos) < min(3*lp, ls-lp):
+                                while len(neg_pos) < min(neg_beishu*lp, ls-lp):
                                     pos = np.random.choice(array, 1).tolist()
                                     if pos in pos_pos or pos in neg_pos:
                                         continue
@@ -159,15 +166,44 @@ def data2numpy(seed):
                                     for word in ents:
                                         neg_sample += '#' + word
                                     relation_array.append((neg_sample, 0))
-                                continue
 
-                            while len(neg_pos) < min(3*lp, ls*(ls-1)*(ls-2)-lp):
-                                # print(len(neg_pos), min(3*lp, lp*(lp-1)*(lp-2)-lp), neg_pos)
+                            # 颠倒顺序 2个
+                            for p in pos_pos:
+                                perms = list(permutations(p))
+                                ords = np.random.permutation(6) # 3元组，6个顺序
+                                ct = 0
+                                while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and ct < 2:
+                                    ele = list(perms[ords[ct]])
+                                    if ele not in pos_pos and ele not in neg_pos:
+                                        neg_pos.append(ele)
+                                        ct += 1
+
+                            # 随机替换一个词
+                            for pos in pos_pos:
+                                ct = 0
+                                while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and ct < 2:
+                                    # 随机选取一个位置
+                                    p = np.random.randint(3)
+
+                                    # 随机选取一个实体
+                                    e = np.random.randint(len(sorted_entities))
+                                    while e in pos:
+                                        e = np.random.randint(len(sorted_entities))
+
+                                    can = deepcopy(pos)
+                                    can[p] = e
+
+                                    if can not in pos_pos and can not in neg_pos:
+                                        neg_pos.append(can)
+                                        ct += 1
+
+                            # 随机选择
+                            while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp):
                                 pos = np.random.choice(array, 3, replace=False).tolist()
                                 if pos in pos_pos or pos in neg_pos:
                                     continue
                                 neg_pos.append(pos)
-                            
+
                             for pos in neg_pos:
                                 ents = [sorted_entities[p] for p in pos]
                                 neg_sample = deepcopy(sents[sent-1])
@@ -175,13 +211,13 @@ def data2numpy(seed):
                                     neg_sample += '#' + word
                                 relation_array.append((neg_sample, 0))
                                 ct_relations += 1
-                                if ct_relations % 714 == 0:
+                                if ct_relations % 350 == 0:
                                     ct_code += 3
                                     for word in ents:
                                         code_neg = deepcopy(sents[sent-1])
                                         code_neg += '#Contribution#Code#' + word
                                         relation_array.append((code_neg, 0))
-                                if ct_relations % 43 == 0:
+                                if ct_relations % 20 == 0:
                                     ct_res += 3
                                     for word in ents:
                                         res_neg = deepcopy(sents[sent-1])
@@ -230,5 +266,7 @@ def data2numpy(seed):
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
+    print(t1, t2)
+    raise Exception
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array)
