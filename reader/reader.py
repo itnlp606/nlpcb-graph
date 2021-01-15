@@ -166,35 +166,42 @@ def data2numpy(seed):
                                     for word in ents:
                                         neg_sample += '#' + word
                                     relation_array.append((neg_sample, 0))
+                                continue
 
                             # 颠倒顺序 2个
                             for p in pos_pos:
                                 perms = list(permutations(p))
                                 ords = np.random.permutation(6) # 3元组，6个顺序
                                 ct = 0
-                                while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and ct < 2:
+                                rt = 0
+                                while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and rt < 2:
                                     ele = list(perms[ords[ct]])
                                     if ele not in pos_pos and ele not in neg_pos:
                                         neg_pos.append(ele)
-                                        ct += 1
+                                        rt += 1
+                                    ct += 1
 
                             # 随机替换一个词
-                            for pos in pos_pos:
-                                ct = 0
-                                while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and ct < 2:
-                                    # 随机选取一个位置
-                                    p = np.random.randint(3)
+                            if ls > 3:
+                                for pos in pos_pos:
+                                    rt = 0
+                                    ct = 0
+                                    while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and rt < 2:
+                                        # 随机选取一个位置
+                                        p = np.random.randint(3)
 
-                                    # 随机选取一个实体
-                                    e = np.random.randint(len(sorted_entities))
-                                    while e in pos:
+                                        # 随机选取一个实体
                                         e = np.random.randint(len(sorted_entities))
+                                        while e in pos:
+                                            e = np.random.randint(len(sorted_entities))
+                                            # print(e, pos)
 
-                                    can = deepcopy(pos)
-                                    can[p] = e
+                                        can = deepcopy(pos)
+                                        can[p] = e
 
-                                    if can not in pos_pos and can not in neg_pos:
-                                        neg_pos.append(can)
+                                        if can not in pos_pos and can not in neg_pos:
+                                            neg_pos.append(can)
+                                            rt += 1
                                         ct += 1
 
                             # 随机选择
@@ -266,7 +273,5 @@ def data2numpy(seed):
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
-    print(t1, t2)
-    raise Exception
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array)
