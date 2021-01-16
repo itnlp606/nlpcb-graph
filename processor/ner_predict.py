@@ -12,7 +12,7 @@ from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 def ner_predict(args, tokenizer, device, data_folder):
-    vote_knife = 5
+    vote_knife = 6
     tt_nums = 0
     tt_ents = 0
 

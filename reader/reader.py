@@ -16,14 +16,16 @@ def data2numpy(seed):
     ner_array = []
     relation_array = []
     dd = {0:0, 1:0, 2:0}
+    tt_num, tt_items = 0, 0
+    
     ct_relations = 0
     ct_code, ct_res = 0, 0
     # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
     #     cache_dir='pretrained_models', use_fast=True)
 
     for task in tasks:
-        # if task != 'natural_language_inference':
-        #     continue
+        if task == 'natural_language_inference':
+            continue
 
         # ignore readme
         if task[-3:] == '.md' or task[-4:] == '.git':
@@ -37,6 +39,7 @@ def data2numpy(seed):
         entity_pat = 'entities.txt'
 
         for article in articles:
+            tt_num += 1
             # 提取句子文件
             files = os.listdir('data/'+task+'/'+article)
             for f in files:
@@ -61,6 +64,7 @@ def data2numpy(seed):
             with open(entity_dir, 'r') as f:
                 entities = f.readlines()
             labels = [int(label) for label in labels]
+            tt_items += len(entities)
             
             def get_context(i):
                 if i < 0 or i >= len(sents):
@@ -230,5 +234,7 @@ def data2numpy(seed):
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
+    # print(tt_num, tt_items, tt_items/tt_num)
+    # raise Exception
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array)

@@ -11,9 +11,11 @@ from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 def clas_predict(args, tokenizer, device, data_folder):
-    vote_knife = 5
+    vote_knife = 4
+    tt_num = 0
+    tt_sents = 0
 
-    base_dir = 'sent_clas_models'
+    base_dir = 'nli_sent_models'
     mods = os.listdir(base_dir)
 
     tasks = os.listdir(data_folder)
@@ -22,7 +24,7 @@ def clas_predict(args, tokenizer, device, data_folder):
         if task[-3:] == '.md' or task[-4:] == '.git' or task[-4:] == '.zip':
             continue
 
-        if task == 'natural_language_inference': continue
+        if task != 'natural_language_inference': continue
 
         task_path = 'results/'+task
         if not os.path.exists(task_path):
@@ -112,10 +114,10 @@ def clas_predict(args, tokenizer, device, data_folder):
                         if vote >= vote_knife:
                             result.append(q*args.batch_size + idx + 1)
 
+            tt_num += 1
+            tt_sents += len(result)
             # 写进文件
             with open(path+'/sentences.txt', 'w') as f:
                 for idx, sent in enumerate(result):
-                    if idx == 0:
-                        f.write(str(sent))
-                    else:
-                        f.write('\n'+str(sent))
+                    f.write(str(sent)+'\n')
+    print(tt_sents, tt_num, tt_sents/tt_num)
