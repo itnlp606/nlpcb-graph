@@ -41,7 +41,13 @@ def relation_predict(args, tokenizer, device, data_folder):
         pattern = 'Stanza-out.txt'
         paragraph_pat = 'Grobid-out.txt'
 
-        for article in tqdm(articles):
+        if args.use_tqdm:
+            itr = tqdm(articles)
+        else:
+            itr = articles
+
+        for article in itr:
+            if not args.use_tqdm: print(article)
             # mkdir
             trip_path = task_path + '/' + article + '/triples'
 

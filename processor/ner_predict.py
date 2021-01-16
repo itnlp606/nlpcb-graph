@@ -12,7 +12,7 @@ from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 def ner_predict(args, tokenizer, device, data_folder):
-    vote_knife = 6
+    vote_knife = 7
     tt_nums = 0
     tt_ents = 0
 
@@ -128,6 +128,6 @@ def ner_predict(args, tokenizer, device, data_folder):
             # 写进文件
             with open('results/'+task+'/'+article+'/entities.txt', 'w') as f:
                 for idx, s in enumerate(ents_to_write):
-                    else: f.write(s+'\n')
+                    f.write(s+'\n')
 
     print(tt_ents/tt_nums, tt_ents, tt_nums)
