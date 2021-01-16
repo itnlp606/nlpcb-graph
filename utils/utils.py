@@ -1,5 +1,7 @@
 import numpy as np
 from datetime import datetime
+from copy import deepcopy
+from math import ceil
 import os
 
 class CountSmooth:
@@ -51,12 +53,32 @@ def clear_dir(dir):
 def divide_dataset(seed, array, num_fold, fold):
     np.random.seed(seed)
     np.random.shuffle(array)
-    block_len = int(array.shape[0]/10)
+    block_len = int(array.shape[0]/num_fold)
 
-    num_blocks = num_fold-fold
-    start = block_len*num_blocks
+    start_id = num_fold-fold
+    start = block_len*start_id
     a = np.vstack([array[0:start], array[start+block_len:]])
     return a, array[start:start+block_len]
-        
+
+def divide_by_type(dic, num_fold, fold):
+    # 传入的是数组的数组
+    gk = deepcopy(dic)
+    block_len = ceil(len(gk)/num_fold)
+
+    start_id = num_fold-fold
+    start = start_id*block_len
+    valid = stack(gk[start:start+block_len])
+
+    del gk[start:start+block_len]
+    train = stack(gk)
+    return train, valid
+
+# stack a list of tensor, with different shape
+def stack(array_list):
+    a = np.array(array_list[0])
+    for i in range(1, len(array_list)):
+        a = np.vstack((a, array_list[i]))
+    return a
+
 if __name__ == '__main__':
     print(strftime())

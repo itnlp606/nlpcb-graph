@@ -22,7 +22,7 @@ if __name__ == '__main__':
     # read data
     # with open('array.pkl', 'rb') as f:
     #     array = pickle.load(f)
-    clas_array, ner_array, relation_array = data2numpy(args.seed)
+    clas_array, ner_array, relation_array, type_sent_array = data2numpy(args.seed)
 
     # GPU device
     if torch.cuda.is_available() and args.use_cuda:
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     print("Running on", name)
 
     if args.task == 'clas':
-        array = clas_array
+        array = type_sent_array
         train = clas_train
         predict = clas_predict
     elif args.task == 'ner':

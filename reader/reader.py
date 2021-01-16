@@ -18,10 +18,8 @@ def data2numpy(seed):
     relation_array = []
     dd = {0:0, 1:0, 2:0}
     tt_num, tt_items = 0, 0
-<<<<<<< HEAD
+    type_sent_array = []
     
-=======
->>>>>>> a13c62e9258a8b28f959a8f6fe693bd6848cdb05
     ct_relations = 0
     ct_code, ct_res = 0, 0
     # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
@@ -41,6 +39,7 @@ def data2numpy(seed):
         paragraph_pat = 'Grobid-out.txt'
         sent_pat = 'sentences.txt'
         entity_pat = 'entities.txt'
+        type_tmp_sent = []
 
         for article in articles:
             tt_num += 1
@@ -276,12 +275,17 @@ def data2numpy(seed):
 
                 if i+1 in labels:
                     clas_array.append((sent, 1))#label_id))
+                    type_tmp_sent.append((sent, 1))
                 else:
                     clas_array.append((sent, 0))
+                    type_tmp_sent.append((sent, 0))
+
+        type_sent_array.append(type_tmp_sent)    
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
     # print(tt_num, tt_items, tt_items/tt_num)
     # raise Exception
 
-    return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array)
+    return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array), \
+        type_sent_array
