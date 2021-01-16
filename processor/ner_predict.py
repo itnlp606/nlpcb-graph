@@ -16,7 +16,7 @@ def ner_predict(args, tokenizer, device, data_folder):
     tt_nums = 0
     tt_ents = 0
 
-    base_dir = 'ner_models'
+    base_dir = 'ner_nil_models'
     mods = os.listdir(base_dir)
 
     tasks = os.listdir(data_folder)
