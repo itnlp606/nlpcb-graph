@@ -6,7 +6,7 @@ import transformers
 from time import time
 from tqdm import tqdm
 from copy import deepcopy
-from itertools import combinations
+from itertools import combinations, permutations
 from model.bert import BERTRE
 from collections import defaultdict
 from utils.utils import print_execute_time
@@ -17,9 +17,10 @@ from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 def relation_predict(args, tokenizer, device, data_folder):
-    vote_knife = 4
+    vote_knife = 6
     tt_nums = 0
     tt_trips = 0
+    tt_types = 0
 
     base_dir = 'relation_models'
     mods = os.listdir(base_dir)
@@ -90,6 +91,7 @@ def relation_predict(args, tokenizer, device, data_folder):
                 # 考虑所有排列组合
                 else:
                     combs = combinations(ents, 3)
+                    # combs = permutations(ents, 3)
                     for comb in combs:
                         sample = deepcopy(sent)
                         for ent in comb:
@@ -134,15 +136,20 @@ def relation_predict(args, tokenizer, device, data_folder):
 
             tt_nums += 1
             # 写进文件
+            tt_types += len(result)
 
             for id0 in result:
                 tt_trips += len(result[id0])
                 name = BLOCK2FILENAME[ID2BLOCK[id0]]
                 with open(trip_path+'/'+name, 'w') as f:
                     triples = result[id0]
+                    type_name = ID2BLOCK[id0]
+                    if type_name != 'Code' and type_name != 'has research problem':
+                        f.write('(Contribution||has||'+type_name+')\n')
+
                     for triple in triples:
-                        if ID2BLOCK[id0] == 'Code' and triple[1] != 'Code': continue
-                        if ID2BLOCK[id0] == 'has research problem' and triple[1] != 'has research problem': continue
+                        if type_name == 'Code' and triple[1] != 'Code': continue
+                        if type_name == 'has research problem' and triple[1] != 'has research problem': continue
                         f.write('('+triple[0]+'||'+triple[1]+'||'+triple[2]+')\n')
 
-    print(tt_trips/tt_nums, tt_trips, tt_nums)
+    print(tt_trips/tt_nums, tt_types/tt_nums, tt_trips, tt_nums, tt_types)

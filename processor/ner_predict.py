@@ -128,7 +128,6 @@ def ner_predict(args, tokenizer, device, data_folder):
             # 写进文件
             with open('results/'+task+'/'+article+'/entities.txt', 'w') as f:
                 for idx, s in enumerate(ents_to_write):
-                    if idx == 0: f.write(s)
-                    else: f.write('\n'+s)
+                    else: f.write(s+'\n')
 
     print(tt_ents/tt_nums, tt_ents, tt_nums)
