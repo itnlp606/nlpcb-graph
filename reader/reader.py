@@ -26,8 +26,9 @@ def data2numpy(seed):
     #     cache_dir='pretrained_models', use_fast=True)
 
     for task in tasks:
-        if task == 'natural_language_inference':
-            continue
+        # 不要再取消注释了
+        # if task == 'natural_language_inference':
+        #     continue
 
         # ignore readme
         if task[-3:] == '.md' or task[-4:] == '.git':
@@ -263,7 +264,9 @@ def data2numpy(seed):
                 
                 sent += '#' + title
 
-                sent += get_context(i-1) + get_context(i+1)
+                KK = 2
+                for cpt in range(1, KK+1):
+                    sent += get_context(i-cpt) + get_context(i+cpt)
 
                 # s = tokenizer(sent)
                 # if len(s['input_ids']) < 510:
