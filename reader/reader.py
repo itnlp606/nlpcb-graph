@@ -17,6 +17,7 @@ def data2numpy(seed):
     ner_array = []
     relation_array = []
     dd = {0:0, 1:0, 2:0}
+    tt_num, tt_items = 0, 0
     ct_relations = 0
     ct_code, ct_res = 0, 0
     # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
@@ -38,6 +39,7 @@ def data2numpy(seed):
         entity_pat = 'entities.txt'
 
         for article in articles:
+            tt_num += 1
             # 提取句子文件
             files = os.listdir('data/'+task+'/'+article)
             for f in files:
@@ -99,6 +101,7 @@ def data2numpy(seed):
                         # 去括号
                         ents = line[1:-1].split('||')
                         triples.add(tuple(ents))
+                        tt_items += 1
 
                     # 对句子中的实体排序（插入排序）
                     for sent in sentID2entites:
@@ -150,7 +153,7 @@ def data2numpy(seed):
                         # 生成负样本
                         lp = len(pos_pos)
                         ls = len(sorted_entities)
-                        neg_beishu = 5
+                        neg_beishu = 3
                         if pos_pos:
                             neg_pos = []
                             array = list(range(ls))
@@ -169,40 +172,40 @@ def data2numpy(seed):
                                 continue
 
                             # 颠倒顺序 2个
-                            for p in pos_pos:
-                                perms = list(permutations(p))
-                                ords = np.random.permutation(6) # 3元组，6个顺序
-                                ct = 0
-                                rt = 0
-                                while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and rt < 2:
-                                    ele = list(perms[ords[ct]])
-                                    if ele not in pos_pos and ele not in neg_pos:
-                                        neg_pos.append(ele)
-                                        rt += 1
-                                    ct += 1
+                            # for p in pos_pos:
+                            #     perms = list(permutations(p))
+                            #     ords = np.random.permutation(6) # 3元组，6个顺序
+                            #     ct = 0
+                            #     rt = 0
+                            #     while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and rt < 2:
+                            #         ele = list(perms[ords[ct]])
+                            #         if ele not in pos_pos and ele not in neg_pos:
+                            #             neg_pos.append(ele)
+                            #             rt += 1
+                            #         ct += 1
 
-                            # 随机替换一个词
-                            if ls > 3:
-                                for pos in pos_pos:
-                                    rt = 0
-                                    ct = 0
-                                    while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and rt < 2:
-                                        # 随机选取一个位置
-                                        p = np.random.randint(3)
+                            # # 随机替换一个词
+                            # if ls > 3:
+                            #     for pos in pos_pos:
+                            #         rt = 0
+                            #         ct = 0
+                            #         while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and rt < 2:
+                            #             # 随机选取一个位置
+                            #             p = np.random.randint(3)
 
-                                        # 随机选取一个实体
-                                        e = np.random.randint(len(sorted_entities))
-                                        while e in pos:
-                                            e = np.random.randint(len(sorted_entities))
-                                            # print(e, pos)
+                            #             # 随机选取一个实体
+                            #             e = np.random.randint(len(sorted_entities))
+                            #             while e in pos:
+                            #                 e = np.random.randint(len(sorted_entities))
+                            #                 # print(e, pos)
 
-                                        can = deepcopy(pos)
-                                        can[p] = e
+                            #             can = deepcopy(pos)
+                            #             can[p] = e
 
-                                        if can not in pos_pos and can not in neg_pos:
-                                            neg_pos.append(can)
-                                            rt += 1
-                                        ct += 1
+                            #             if can not in pos_pos and can not in neg_pos:
+                            #                 neg_pos.append(can)
+                            #                 rt += 1
+                            #             ct += 1
 
                             # 随机选择
                             while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp):
@@ -273,5 +276,7 @@ def data2numpy(seed):
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
+    # print(tt_num, tt_items, tt_items/tt_num)
+    # raise Exception
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array)
