@@ -3,6 +3,26 @@ from tqdm import tqdm
 from utils.constants import *
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
+def lm_tensorize(data, tokenizer, args, mode='seq'):
+    all_tokenized_sents, genes, all_labels = relation_preprocess(data, tokenizer)
+    dataset = TensorDataset(all_tokenized_sents['input_ids'], \
+        all_tokenized_sents['attention_mask'], genes, all_labels)
+    if mode == 'seq':
+        sampler = SequentialSampler(dataset)
+        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
+
+    elif mode == 'random':
+        sampler = RandomSampler(dataset)
+        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
+
+def lm_preprocess(data, tokenizer):
+    sents = [d[0] for d in data]
+    labels = [int(d[2]) for d in data]
+    genes = torch.tensor([d[1] for d in data])
+    tokenized_sents = tokenizer(sents, padding=True, truncation=True, return_tensors='pt')
+    labels = torch.tensor(labels)
+    return tokenized_sents, genes, labels
+
 def relation_tensorize(data, tokenizer, args, mode='seq'):
     all_tokenized_sents, all_labels = relation_preprocess(data, tokenizer)
     dataset = TensorDataset(all_tokenized_sents['input_ids'], \

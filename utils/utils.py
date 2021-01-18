@@ -75,7 +75,7 @@ def divide_by_type(dic, num_fold, fold):
 
 # stack a list of tensor, with different shape
 def stack(array_list):
-    a = np.array(array_list[0])
+    a = np.array(array_list[0], dtype=object)
     for i in range(1, len(array_list)):
         a = np.vstack((a, array_list[i]))
     return a

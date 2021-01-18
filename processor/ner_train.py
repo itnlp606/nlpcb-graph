@@ -8,7 +8,7 @@ from model.pgd import PGD
 from torch.optim import swa_utils
 from utils.optim import get_optimizer_scheduler
 from processor.preprocessor import ner_tensorize
-from utils.utils import divide_dataset
+from utils.utils import divide_by_type
 
 def ner_train(args, tokenizer, array, device):
     # do k-fold
@@ -34,7 +34,7 @@ def ner_train(args, tokenizer, array, device):
             K = args.pgd_K
 
         # new tensorized data and maps
-        train_data, valid_data = divide_dataset(args.seed, array, args.num_fold, fold)
+        train_data, valid_data = divide_by_type(array, args.num_fold, fold)
         train_loader = ner_tensorize(train_data, tokenizer, args, mode='random')
         valid_loader = ner_tensorize(valid_data, tokenizer, args, mode='seq')
         len_train = len(train_loader)

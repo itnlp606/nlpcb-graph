@@ -19,6 +19,9 @@ def data2numpy(seed):
     dd = {0:0, 1:0, 2:0}
     tt_num, tt_items = 0, 0
     type_sent_array = []
+    type_ner_array = []
+    lm_sents = []
+    lm_id = 1
     
     ct_relations = 0
     ct_code, ct_res = 0, 0
@@ -41,6 +44,7 @@ def data2numpy(seed):
         sent_pat = 'sentences.txt'
         entity_pat = 'entities.txt'
         type_tmp_sent = []
+        type_tmp_ner = []
 
         for article in articles:
             tt_num += 1
@@ -176,18 +180,21 @@ def data2numpy(seed):
                                     relation_array.append((neg_sample, 0))
                                 continue
 
-                            # 颠倒顺序 2个
-                            # for p in pos_pos:
-                            #     perms = list(permutations(p))
-                            #     ords = np.random.permutation(6) # 3元组，6个顺序
-                            #     ct = 0
-                            #     rt = 0
-                            #     while len(neg_pos) < min(neg_beishu*lp, ls*(ls-1)*(ls-2)-lp) and rt < 2:
-                            #         ele = list(perms[ords[ct]])
-                            #         if ele not in pos_pos and ele not in neg_pos:
-                            #             neg_pos.append(ele)
-                            #             rt += 1
-                            #         ct += 1
+                            # 颠倒顺序 放入语言模型中
+                            for p in pos_pos:
+                                perms = list(permutations(p))
+                                for od in perms:
+                                    st_list = [sorted_entities[se] for se in od]
+                                    st = ''
+                                    for dx, word in enumerate(st_list):
+                                        if dx == 0: st += word
+                                        else: st += ' ' + word
+
+                                    if list(od) in pos_pos:
+                                        lm_sents.append((st, lm_id, 1))
+                                    else:
+                                        lm_sents.append((st, lm_id, 0))
+                                lm_id += 1
 
                             # # 随机替换一个词
                             # if ls > 3:
@@ -248,6 +255,7 @@ def data2numpy(seed):
                 # 加特征前处理NER问题
                 if i+1 in labels:
                     ner_array.append((sent, sentID2entites[i+1]))
+                    type_tmp_ner.append((sent, sentID2entites[i+1]))
 
                 # add feature
                 # extract title
@@ -284,6 +292,7 @@ def data2numpy(seed):
                     type_tmp_sent.append((sent, 0))
 
         type_sent_array.append(type_tmp_sent)    
+        type_ner_array.append(type_tmp_ner)
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
@@ -291,4 +300,4 @@ def data2numpy(seed):
     # raise Exception
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array), \
-        type_sent_array
+        type_sent_array, type_ner_array, lm_sents
