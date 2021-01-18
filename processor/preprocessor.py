@@ -4,7 +4,7 @@ from utils.constants import *
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
 def lm_tensorize(data, tokenizer, args, mode='seq'):
-    all_tokenized_sents, genes, all_labels = relation_preprocess(data, tokenizer)
+    all_tokenized_sents, genes, all_labels = lm_preprocess(data, tokenizer)
     dataset = TensorDataset(all_tokenized_sents['input_ids'], \
         all_tokenized_sents['attention_mask'], genes, all_labels)
     if mode == 'seq':
@@ -18,7 +18,7 @@ def lm_tensorize(data, tokenizer, args, mode='seq'):
 def lm_preprocess(data, tokenizer):
     sents = [d[0] for d in data]
     labels = [int(d[2]) for d in data]
-    genes = torch.tensor([d[1] for d in data])
+    genes = torch.tensor([int(d[1]) for d in data])
     tokenized_sents = tokenizer(sents, padding=True, truncation=True, return_tensors='pt')
     labels = torch.tensor(labels)
     return tokenized_sents, genes, labels

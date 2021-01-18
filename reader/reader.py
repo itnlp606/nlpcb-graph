@@ -300,4 +300,4 @@ def data2numpy(seed):
     # raise Exception
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array), \
-        type_sent_array, type_ner_array, lm_sents
+        type_sent_array, type_ner_array, np.array(lm_sents)

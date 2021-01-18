@@ -9,6 +9,7 @@ from processor.relation_predict import relation_predict
 from processor.ner_train import ner_train
 from processor.clas_train import clas_train
 from processor.relation_train import relation_train
+from processor.lm_train import lm_train
 from processor.preprocessor import clas_tensorize, ner_tensorize
 from reader.reader import data2numpy
 
@@ -47,6 +48,9 @@ if __name__ == '__main__':
         array = relation_array
         train = relation_train
         predict = relation_predict
+    elif args.task == 'lm':
+        array = lm_array
+        train = lm_train
 
     if args.do_train:
         train(args, tokenizer, array, device)

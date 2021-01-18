@@ -68,7 +68,7 @@ def lm_train(args, tokenizer, array, device):
                 model.zero_grad()
                 loss, logits = model(ids, masks, labels)
                 if args.use_at == 'pgd':
-                    _, _, ori_F1 = model.calculate_F1([logits], [labels])
+                    ori_F1 = model.calculate_F1([logits], [labels], [genes])
 
                 # process loss
                 loss.backward()
@@ -91,7 +91,7 @@ def lm_train(args, tokenizer, array, device):
                         else:
                             pgd.restore_grad()
                         loss_adv, at_logits = model(ids, masks, labels)
-                        _, _, new_F1 = model.calculate_F1([at_logits], [labels])
+                        new_F1 = model.calculate_F1([at_logits], [labels], [genes])
                         if new_F1 < ori_F1:
                             pgd.restore_grad()
                             loss_adv.backward()
@@ -115,28 +115,29 @@ def lm_train(args, tokenizer, array, device):
                 with torch.no_grad():
                     valid_model.eval()
                     valid_losses = 0
-                    pred_logits, pred_labels = [], []
+                    pred_logits, pred_labels, gs = [], [], []
                     for idx, batch_data in enumerate(valid_iter):
                         batch_data = tuple(i.to(device) for i in batch_data)
-                        ids, masks, labels = batch_data
+                        ids, masks, genes, labels = batch_data
                         
                         loss, logits = valid_model(ids, masks, labels)
 
                         pred_logits.append(logits)
                         pred_labels.append(labels)
+                        gs.append(genes)
 
                         # process loss
                         valid_losses += loss.item()
 
                     valid_losses /= len(valid_loader)
 
-                    precision, recall, F1 = valid_module.calculate_F1(pred_logits, pred_labels)
+                    F1 = valid_module.calculate_F1(pred_logits, pred_labels, gs)
             
                 if args.save_models and args.avg_steps > 0:
                     torch.save(valid_module, args.model_dir + '/MOD' + str(fold) + '_' + str(i+1))
 
-                print('Epoch %d train:%.2e valid:%.2e precision:%.4f recall:%.4f F1:%.4f time:%.0f' % \
-                    (i+1, train_losses, valid_losses, precision, recall, F1, time()-start_time))
+                print('Epoch %d train:%.2e valid:%.2e precision:%.4f time:%.0f' % \
+                    (i+1, train_losses, valid_losses, F1, time()-start_time))
                 start_time = time()
 
                 if args.avg_steps == 0:
