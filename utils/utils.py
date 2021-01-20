@@ -1,7 +1,7 @@
 import numpy as np
 from datetime import datetime
 from copy import deepcopy
-from math import ceil
+from math import ceil, factorial
 import os
 
 class CountSmooth:
@@ -79,6 +79,10 @@ def stack(array_list):
     for i in range(1, len(array_list)):
         a = np.vstack((a, array_list[i]))
     return a
+
+def C(big, small):
+    if big < small: return 0
+    return factorial(big)/(factorial(small)*factorial(big-small))
 
 if __name__ == '__main__':
     print(strftime())

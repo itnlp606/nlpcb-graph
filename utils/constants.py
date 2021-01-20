@@ -10,7 +10,7 @@ BLOCK2ID = {
     'Tasks':9, 
     'Code':10, 
     'Model':11, 
-    'Result':12
+    'Results':12
 }
 
 ID2BLOCK = {
@@ -25,7 +25,7 @@ ID2BLOCK = {
     9:'Tasks', 
     10:'Code', 
     11:'Model', 
-    12:'Result'
+    12:'Results'
 }
 
 FILENAME2BLOCK = {
@@ -40,7 +40,7 @@ FILENAME2BLOCK = {
     'tasks.txt': 'Tasks', 
     'code.txt': 'Code', 
     'model.txt': 'Model', 
-    'results.txt': 'Result'
+    'results.txt': 'Results'
 }
 
 BLOCK2FILENAME = {
@@ -55,7 +55,7 @@ BLOCK2FILENAME = {
     'Tasks': 'tasks.txt', 
     'Code': 'code.txt', 
     'Model': 'model.txt', 
-    'Result': 'results.txt' 
+    'Results': 'results.txt' 
 }
 
 BLOCK_BACK_NAMES = set([
@@ -74,34 +74,6 @@ BLOCK_BACK_NAMES = set([
 BLOCK_MID_NAMES = {
     'Code',
     'has research problem'
-}
-
-LABEL2ID = {
-    'ablation-analysis':1,
-    'code':2,
-    'model':3,
-    'research-problem':4,
-    'results':5,
-    'dataset':6,
-    'hyperparameters':7,
-    'experiments':8,
-    'baselines':9,
-    'experimental-setup':10,
-    'approach':11
-}
-
-ID2LABEL = {
-    1:'ablation-analysis',
-    2:'code',
-    3:'model',
-    4:'research-problem',
-    5:'results',
-    6:'dataset',
-    7:'hyperparameters',
-    8:'experiments',
-    9:'baselines',
-    10:'experimental-setup',
-    11:'approach'
 }
 
 NER_LABEL2ID = {
