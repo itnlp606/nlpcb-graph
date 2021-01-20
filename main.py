@@ -24,7 +24,7 @@ if __name__ == '__main__':
     # with open('array.pkl', 'rb') as f:
     #     array = pickle.load(f)
     clas_array, ner_array, relation_array, type_sent_array, \
-        type_ner_array, lm_array = data2numpy(args.seed)
+        type_ner_array, type_relation_array = data2numpy(args.seed)
 
     # GPU device
     if torch.cuda.is_available() and args.use_cuda:
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         train = ner_train
         predict = ner_predict
     elif args.task == 'relation':
-        array = relation_array
+        array = type_relation_array
         train = relation_train
         predict = relation_predict
     elif args.task == 'lm':

@@ -21,6 +21,7 @@ def data2numpy(seed):
     tt_num, tt_items = 0, 0
     type_sent_array = []
     type_ner_array = []
+    type_relation_array = []
     lm_sents = []
     lm_id = 1
 
@@ -53,6 +54,7 @@ def data2numpy(seed):
         entity_pat = 'entities.txt'
         type_tmp_sent = []
         type_tmp_ner = []
+        type_tmp_relation = []
 
         for article in articles:
             tt_num += 1
@@ -149,6 +151,7 @@ def data2numpy(seed):
                                 for word in triple:
                                     pos_sample += '#' + word
                                 relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 cr += 1
                                 pos_pos.append([sorted_entities.index(triple[-1])])
                                 yu_triples.discard(triple)
@@ -172,6 +175,7 @@ def data2numpy(seed):
                                     pos_sample = deepcopy(sents[sent-1])
                                     pos_sample += '#type' + '#' + triple[1] + '#' + triple[2]
                                     relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                    type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
 
                                 type2 += 1
                                 yu_triples.discard(triple)
@@ -188,6 +192,7 @@ def data2numpy(seed):
                                     pos_sample += '#' + word
 
                                 relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 pos = [sorted_entities.index(word) for word in triple]
                                 if pos[0] < pos[1] < pos[2]:
                                     pos_pos.append(pos)
@@ -297,6 +302,7 @@ def data2numpy(seed):
                                 for word in ents:
                                     neg_sample += '#' + word
                                 relation_array.append((neg_sample, 0))
+                                type_tmp_relation.append((neg_sample, 0))
                                 ct_relations += 1
                                 if ct_relations % 350 == 0:
                                     ct_code += 3
@@ -305,6 +311,7 @@ def data2numpy(seed):
                                         code_neg += '#Contribution#Code#' + word
                                         ccr += 1
                                         relation_array.append((code_neg, 0))
+                                        type_tmp_relation.append((code_neg, 0))
                                 if ct_relations % 20 == 0:
                                     ct_res += 3
                                     for word in ents:
@@ -312,6 +319,7 @@ def data2numpy(seed):
                                         res_neg += '#Contribution#has research problem#' + word
                                         rrr += 1
                                         relation_array.append((res_neg, 0))
+                                        type_tmp_relation.append((res_neg, 0))
 
                     
                     # if len(yu_triples) > 0:
@@ -365,10 +373,11 @@ def data2numpy(seed):
 
         type_sent_array.append(type_tmp_sent)    
         type_ner_array.append(type_tmp_ner)
+        type_relation_array.append(type_tmp_relation)
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
     # print(tt_num, tt_items, tt_items/tt_num)
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array), \
-        type_sent_array, type_ner_array, np.array(lm_sents)
+        type_sent_array, type_ner_array, type_relation_array
