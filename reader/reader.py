@@ -290,6 +290,10 @@ def data2numpy(seed):
                             for pos in neg_pos:
                                 ents = [sorted_entities[p] for p in pos]
                                 neg_sample = deepcopy(sents[sent-1])
+
+                                if len(pos) == 2:
+                                    neg_sample += 'type'
+
                                 for word in ents:
                                     neg_sample += '#' + word
                                 relation_array.append((neg_sample, 0))
@@ -365,7 +369,6 @@ def data2numpy(seed):
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
     # print(tt_num, tt_items, tt_items/tt_num)
-    # raise Exception
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array), \
         type_sent_array, type_ner_array, np.array(lm_sents)
