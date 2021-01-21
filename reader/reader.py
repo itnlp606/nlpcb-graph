@@ -143,6 +143,7 @@ def data2numpy(seed):
 
                         # 对每个三元组，如果在，看位置
                         pos_pos = []
+                        has_pos = []
                         for triple in triples:
                             # code, research情况
                             if FILENAME2BLOCK[name] in BLOCK_MID_NAMES \
@@ -214,15 +215,63 @@ def data2numpy(seed):
                             if triple[1] == 'has' and triple in yu_triples \
                                 and triple[0] in sorted_entities and triple[2] in sorted_entities:
                                 tupht += 1
+                                pp1, pp2 = sorted_entities.index(triple[0]), \
+                                     sorted_entities.index(triple[2])
+                                has_pos.append([pp1, pp2])
+
                                 yu_triples.discard(triple)
+                                pos_sample = deepcopy(sents[sent-1])
+                                pos_sample += '#' + triple[0] + '#has#' + triple[2]
+                                relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
 
                         # 生成负样本
                         lp3, lp2, lp1 = 0, 0, 0
                         ls = len(sorted_entities)
                         neg_beishu = 4
+                        array = list(range(ls))
+
+                        # 单独处理has_pos
+                        neg_has = []
+                        len_has = len(has_pos)
+                        for pos in has_pos:
+                            len_h = min(neg_beishu*len_has, int(C(ls, 2))-len_has)
+                            # 替换第一个实体
+                            ps = list(np.random.choice(array[0:pos[1]], pos[1], replace=False))
+                            for p in ps:
+                                tmp_pos = [p, pos[1]]
+                                if tmp_pos not in has_pos and tmp_pos not in neg_has:
+                                    neg_has.append(tmp_pos)
+                                    break
+                            
+                            # 替换第二个实体
+                            num = ls-pos[0]-1
+                            ps = list(np.random.choice(array[pos[0]+1:], num, replace=False))
+                            for p in ps:
+                                tmp_pos = [pos[0], p]
+                                if tmp_pos not in has_pos and tmp_pos not in neg_has:
+                                    neg_has.append(tmp_pos)
+                                    break        
+                                
+                            # 随机选择
+                            while len(neg_has) < len_h:
+                                pos = np.random.choice(array, 2, replace=False).tolist()
+                                pos.sort()
+                                if pos in has_pos or pos in neg_has:
+                                    continue
+                                neg_has.append(pos)                               
+                                
+                            # 将neg_has里的元组变成句子放入数组中
+                            for pos in neg_has:
+                                ents = [sorted_entities[p] for p in pos]
+                                neg_sample = deepcopy(sents[sent-1])
+                                neg_sample += '#' + ents[0] + '#has'
+                                neg_sample += '#' + ents[1]
+                                relation_array.append((neg_sample, 0))
+                                type_tmp_relation.append((neg_sample, 0))
+
                         if pos_pos and FILENAME2BLOCK[name] not in BLOCK_MID_NAMES:
                             neg_pos = []
-                            array = list(range(ls))
 
                             for pp in pos_pos:
                                 if len(pp) == 3: lp3 += 1
@@ -236,7 +285,7 @@ def data2numpy(seed):
                             # 随机替换一个词
                             array = [i for i in range(len(sorted_entities))]
                             neg_1, neg_2, neg_3 = [], [], []
-                            for pos in pos_pos:
+                            for udx, pos in enumerate(pos_pos):
                                 if len(pos) == 2:
                                     # 替换第一个实体
                                     ps = list(np.random.choice(array[0:pos[1]], pos[1], replace=False))
@@ -253,7 +302,7 @@ def data2numpy(seed):
                                         tmp_pos = [pos[0], p]
                                         if tmp_pos not in pos_pos and tmp_pos not in neg_2:
                                             neg_2.append(tmp_pos)
-                                            break
+                                            break                     
 
                                 elif len(pos) == 3:
                                     # 替换第一个实体
