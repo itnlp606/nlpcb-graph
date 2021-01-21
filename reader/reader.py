@@ -200,17 +200,24 @@ def data2numpy(seed):
                                 yu_triples.discard(triple)
 
                             # 类别元组+has+普通元祖
-                            if triple[0] in BLOCK2FILENAME and triple[1] == 'has' and triple in yu_triples:
+                            if triple[0] in BLOCK2FILENAME and triple[1] == 'has' and triple[2] in sorted_entities:
                                 typeht += 1
+                                ps = sorted_entities.index(triple[2])
+                                pos_pos.append([ps])
+                                pos_sample = deepcopy(sents[sent-1])
+                                pos_sample += '#type#has' + '#' + triple[2]
+                                relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 yu_triples.discard(triple)
                             
                             # 普通元组+has+普通元祖
-                            if triple[1] == 'has' and triple in yu_triples:
+                            if triple[1] == 'has' and triple in yu_triples \
+                                and triple[0] in sorted_entities and triple[2] in sorted_entities:
                                 tupht += 1
                                 yu_triples.discard(triple)
 
                         # 生成负样本
-                        lp3, lp2 = 0, 0
+                        lp3, lp2, lp1 = 0, 0, 0
                         ls = len(sorted_entities)
                         neg_beishu = 4
                         if pos_pos and FILENAME2BLOCK[name] not in BLOCK_MID_NAMES:
@@ -220,13 +227,15 @@ def data2numpy(seed):
                             for pp in pos_pos:
                                 if len(pp) == 3: lp3 += 1
                                 elif len(pp) == 2: lp2 += 1
+                                elif len(pp) == 1: lp1 += 1
 
-                            len2 = min(neg_beishu*(lp2), int(C(ls, 2))-lp2)
-                            len3 = min(neg_beishu*(lp3), int(C(ls, 3))-lp3)
+                            len1 = min(neg_beishu*lp1, ls-lp1)
+                            len2 = min(neg_beishu*lp2, int(C(ls, 2))-lp2)
+                            len3 = min(neg_beishu*lp3, int(C(ls, 3))-lp3)
 
                             # 随机替换一个词
                             array = [i for i in range(len(sorted_entities))]
-                            neg_2, neg_3 = [], []
+                            neg_1, neg_2, neg_3 = [], [], []
                             for pos in pos_pos:
                                 if len(pos) == 2:
                                     # 替换第一个实体
@@ -273,6 +282,13 @@ def data2numpy(seed):
                                             neg_3.append(tmp_pos)
                                             break
 
+                            # 随机选择：对2实体元组 
+                            while len(neg_1) < len1:
+                                pos = np.random.choice(array, 1, replace=False).tolist()
+                                if pos in pos_pos or pos in neg_1:
+                                    continue
+                                neg_1.append(pos)
+
                             # 随机选择：对2实体元组
                             while len(neg_2) < len2:
                                 pos = np.random.choice(array, 2, replace=False).tolist()
@@ -289,15 +305,18 @@ def data2numpy(seed):
                                     continue
                                 neg_3.append(pos)
 
-                            neg_pos = neg_2 + neg_3
+                            neg_pos = neg_1 + neg_2 + neg_3
 
                             # 将neg_pos里的元组变成句子放入数组中
                             for pos in neg_pos:
                                 ents = [sorted_entities[p] for p in pos]
                                 neg_sample = deepcopy(sents[sent-1])
 
+                                if len(pos) == 1:
+                                    neg_sample += '#type#has'
+
                                 if len(pos) == 2:
-                                    neg_sample += 'type'
+                                    neg_sample += '#type'
 
                                 for word in ents:
                                     neg_sample += '#' + word
@@ -374,10 +393,13 @@ def data2numpy(seed):
         type_sent_array.append(type_tmp_sent)    
         type_ner_array.append(type_tmp_ner)
         type_relation_array.append(type_tmp_relation)
+        # for i in type_tmp_relation:
+        #     print(i)
 
     # with open('array.pkl', 'wb') as f:
     #     pickle.dump(np.array(array), f)
     # print(tt_num, tt_items, tt_items/tt_num)
+    # print(contris, type2, trip3, typeht, tupht, cr)
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array), \
         type_sent_array, type_ner_array, type_relation_array
