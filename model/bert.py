@@ -72,6 +72,8 @@ class BERTRE(nn.Module):
                 F1s[i] = 2*pres[i]*recalls[i] / (pres[i] + recalls[i])
             except:
                 pres[i], recalls[i], F1s[i] = 0, 0, 0
+        
+        print(F1s)
 
         return np.mean(pres), np.mean(recalls), np.mean(F1s)
 

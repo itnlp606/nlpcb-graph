@@ -12,20 +12,27 @@ from utils.utils import divide_dataset
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 
 def ner_predict(args, tokenizer, device, data_folder):
-    vote_knife = 7
+    vote_knife = 9
     tt_nums = 0
     tt_ents = 0
 
-    base_dir = 'ner_nil_models'
-    mods = os.listdir(base_dir)
+    mods = []
+
+    dir1 = 'ner_task_models'
+    mods1 = os.listdir(dir1)
+    for mod in mods1:
+        mods.append(dir1 + '/' + mod)
+
+    dir2 = 'ner_models_bendi'
+    mods2 = os.listdir(dir2)
+    for mod in mods2:
+        mods.append(dir2 + '/' + mod)
 
     tasks = os.listdir(data_folder)
     for task in tasks:
         # ignore readme
         if task[-3:] == '.md' or task[-4:] == '.git' or task[-4:] == '.zip':
             continue
-
-        if task != 'natural_language_inference': continue
 
         task_path = data_folder+'/'+task
 
@@ -83,7 +90,7 @@ def ner_predict(args, tokenizer, device, data_folder):
                     ids, masks, maps, labels = data
                     
                     for mod in mods:
-                        model = torch.load(base_dir+'/'+mod, map_location=torch.device('cpu'))
+                        model = torch.load(mod, map_location=torch.device('cpu'))
                         model = model.to(device)
                         model.eval()
                         _, logits = model(ids, masks, labels)

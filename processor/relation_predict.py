@@ -47,7 +47,7 @@ def relation_predict(args, tokenizer, device, data_folder):
             itr = articles
 
         for article in itr:
-            if not args.use_tqdm: print(article)
+            if not args.use_tqdm: print(article, '/', len(itr))
             # mkdir
             trip_path = task_path + '/' + article + '/triples'
 
@@ -91,18 +91,48 @@ def relation_predict(args, tokenizer, device, data_folder):
                 t2 = '#Contribution#Code#'
                 if len(ents) < 3:
                     for ent in ents:
-                        inputs.append(sent+t1+ent[2])
-                        inputs.append(sent+t2+ent[2])
+                        if sent+t1+ent[2] not in inputs:
+                            inputs.append(sent+t1+ent[2])
+                        if sent+t2+ent[2] not in inputs:
+                            inputs.append(sent+t2+ent[2])
 
                 # 考虑所有排列组合
                 else:
+                    # 普通三元组
                     combs = combinations(ents, 3)
                     # combs = permutations(ents, 3)
                     for comb in combs:
                         sample = deepcopy(sent)
                         for ent in comb:
                             sample += '#' + ent[2]
-                        inputs.append(sample)
+                        if sample not in inputs:
+                            inputs.append(sample)
+                    
+                    # 类别+has+实体
+                    for ent in ents:
+                        sample = deepcopy(sent)
+                        sample += '#type#has#' + ent[2]
+                        if sample not in inputs:
+                            inputs.append(sample)
+
+                    combs = combinations(ents, 2)
+                    # 类别+二元组
+                    for comb in combs:
+                        sample = deepcopy(sent)
+                        sample += '#type'
+                        for ent in comb:
+                            sample += '#' + ent[2]
+                        if sample not in inputs:
+                            inputs.append(sample)
+
+                    # 元组+has+元组
+                    for comb in combs:
+                        sample = deepcopy(sent)
+                        sample += '#' + comb[0][2]
+                        sample += '#has'
+                        sample += '#' + comb[1][2]
+                        if sample not in inputs:
+                            inputs.append(sample)
 
             tokenized_sents = tokenizer(inputs, padding=True, truncation=True, \
                 return_tensors='pt')
@@ -156,6 +186,12 @@ def relation_predict(args, tokenizer, device, data_folder):
                     for triple in triples:
                         if type_name == 'Code' and triple[1] != 'Code': continue
                         if type_name == 'has research problem' and triple[1] != 'has research problem': continue
-                        f.write('('+triple[0]+'||'+triple[1]+'||'+triple[2]+')\n')
+
+                        # 判断type + has + 实体是否匹配
+                        if triple[0] == 'type':
+                            f.write('('+type_name+'||'+triple[1]+'||'+triple[2]+')\n')
+
+                        else:
+                            f.write('('+triple[0]+'||'+triple[1]+'||'+triple[2]+')\n')
 
     print(tt_trips/tt_nums, tt_types/tt_nums, tt_trips, tt_nums, tt_types)
