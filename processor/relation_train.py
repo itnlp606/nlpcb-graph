@@ -34,7 +34,8 @@ def relation_train(args, tokenizer, array, device):
             K = args.pgd_K
 
         # new tensorized data and maps
-        train_data, valid_data = divide_by_type(array, args.num_fold, fold)
+        # train_data, valid_data = divide_dataset(args.seed, array, args.num_fold, fold)
+        train_data, valid_data = array
         train_loader = relation_tensorize(train_data, tokenizer, args, mode='random')
         valid_loader = relation_tensorize(valid_data, tokenizer, args, mode='seq')
         len_train = len(train_loader)

@@ -29,7 +29,7 @@ def relation_tensorize(data, tokenizer, args, mode='seq'):
         all_tokenized_sents['attention_mask'], all_labels)
     if mode == 'seq':
         sampler = SequentialSampler(dataset)
-        return DataLoader(dataset, sampler=sampler, batch_size=args.batch_size)
+        return DataLoader(dataset, sampler=sampler, batch_size=128)
 
     elif mode == 'random':
         sampler = RandomSampler(dataset)

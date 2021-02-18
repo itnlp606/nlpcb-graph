@@ -3,7 +3,7 @@ import json
 import pickle
 import numpy as np
 from copy import deepcopy
-from itertools import permutations
+from itertools import permutations, combinations
 from utils.utils import C
 from utils.constants import *
 from transformers import AutoTokenizer
@@ -17,6 +17,7 @@ def data2numpy(seed):
     clas_array = []
     ner_array = []
     relation_array = []
+    relation_valid_array = []
     dd = {0:0, 1:0, 2:0}
     tt_num, tt_items = 0, 0
     type_sent_array = []
@@ -37,10 +38,17 @@ def data2numpy(seed):
     # tokenizer = AutoTokenizer.from_pretrained('bert-base-uncased', \
     #     cache_dir='pretrained_models', use_fast=True)
 
+    # question_answering
+    # relation_extraction
+    # sentence_classification
+    # sentence_compression
+    # text_generation
+
     for task in tasks:
         # 不要再取消注释了
-        # if task == 'natural_language_inference':
-        #     continue
+        if task != 'relation_extraction':
+            continue
+        print(task)
 
         # ignore readme
         if task[-3:] == '.md' or task[-4:] == '.git':
@@ -152,6 +160,7 @@ def data2numpy(seed):
                                 for word in triple:
                                     pos_sample += '#' + word
                                 relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                relation_valid_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 cr += 1
                                 pos_pos.append([sorted_entities.index(triple[-1])])
@@ -176,6 +185,7 @@ def data2numpy(seed):
                                     pos_sample = deepcopy(sents[sent-1])
                                     pos_sample += '#type' + '#' + triple[1] + '#' + triple[2]
                                     relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                    relation_valid_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                     type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
 
                                 type2 += 1
@@ -193,6 +203,7 @@ def data2numpy(seed):
                                     pos_sample += '#' + word
 
                                 relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                relation_valid_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 pos = [sorted_entities.index(word) for word in triple]
                                 if pos[0] < pos[1] < pos[2]:
@@ -208,6 +219,7 @@ def data2numpy(seed):
                                 pos_sample = deepcopy(sents[sent-1])
                                 pos_sample += '#type#has' + '#' + triple[2]
                                 relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                relation_valid_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 yu_triples.discard(triple)
                             
@@ -223,6 +235,7 @@ def data2numpy(seed):
                                 pos_sample = deepcopy(sents[sent-1])
                                 pos_sample += '#' + triple[0] + '#has#' + triple[2]
                                 relation_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
+                                relation_valid_array.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
                                 type_tmp_relation.append((pos_sample, BLOCK2ID[FILENAME2BLOCK[name]]))
 
                         # 生成负样本
@@ -230,6 +243,15 @@ def data2numpy(seed):
                         ls = len(sorted_entities)
                         neg_beishu = 4
                         array = list(range(ls))
+
+                        # valid 负样本
+                        t_all = combinations(array, 3)
+                        for p_t in t_all:
+                            if p_t in pos_pos: continue
+                            neg_t = deepcopy(sents[sent-1])
+                            for p in p_t:
+                                neg_t += '#' + sorted_entities[p]
+                            relation_valid_array.append((neg_t, 0))
 
                         # 单独处理has_pos
                         neg_has = []
@@ -282,9 +304,10 @@ def data2numpy(seed):
                             len2 = min(neg_beishu*lp2, int(C(ls, 2))-lp2)
                             len3 = min(neg_beishu*lp3, int(C(ls, 3))-lp3)
 
-                            # 随机替换一个词
                             array = [i for i in range(len(sorted_entities))]
                             neg_1, neg_2, neg_3 = [], [], []
+
+                            # 随机替换一个词
                             for udx, pos in enumerate(pos_pos):
                                 if len(pos) == 2:
                                     # 替换第一个实体
@@ -338,7 +361,7 @@ def data2numpy(seed):
                                     continue
                                 neg_1.append(pos)
 
-                            # 随机选择：对2实体元组
+                            # # 随机选择：对2实体元组
                             while len(neg_2) < len2:
                                 pos = np.random.choice(array, 2, replace=False).tolist()
                                 pos.sort()
@@ -420,7 +443,7 @@ def data2numpy(seed):
                 
                 sent += '#' + title
 
-                KK = 2
+                KK = -1
                 for cpt in range(1, KK+1):
                     sent += get_context(i-cpt) + get_context(i+cpt)
 
@@ -451,4 +474,4 @@ def data2numpy(seed):
     # print(contris, type2, trip3, typeht, tupht, cr)
 
     return np.array(clas_array), np.array(ner_array, dtype=object), np.array(relation_array), \
-        type_sent_array, type_ner_array, type_relation_array
+        type_sent_array, type_ner_array, type_relation_array, relation_valid_array

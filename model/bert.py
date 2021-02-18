@@ -65,17 +65,18 @@ class BERTRE(nn.Module):
                     total_true[true-1] += 1
 
         F1s, pres, recalls = deepcopy(zeros), deepcopy(zeros), deepcopy(zeros)
+
+        ll = len(F1s)
         for i in range(len(F1s)):
+            if total_true[i] == 0: ll -= 1
             try:
                 pres[i] = pred_true[i] / total_pred[i]
                 recalls[i] = pred_true[i] / total_true[i]
                 F1s[i] = 2*pres[i]*recalls[i] / (pres[i] + recalls[i])
             except:
                 pres[i], recalls[i], F1s[i] = 0, 0, 0
-        
-        print(F1s)
 
-        return np.mean(pres), np.mean(recalls), np.mean(F1s)
+        return np.mean(pres), np.mean(recalls), np.sum(F1s)/ll
 
 class BERTNER(nn.Module):
     def __init__(self, args):
